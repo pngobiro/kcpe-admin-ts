@@ -17,7 +17,7 @@ interface QuizQuestion {
   question_image?: string;
   question_video?: string;
   question_audio?: string;
-  question_type: 'multiple_choice' | 'true_false' | 'short_answer';
+  question_type: 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank';
   options: QuizOption[];
   correct_answer?: string;
   explanation?: string;
@@ -144,6 +144,15 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
               ))}
             </div>
           )}
+          
+          {(question.question_type === 'short_answer' || question.question_type === 'fill_in_blank') && question.correct_answer && (
+            <div className="correct-answer-preview">
+              <span className="answer-label">
+                {question.question_type === 'fill_in_blank' ? 'Answer:' : 'Correct Answer(s):'}
+              </span>
+              <span className="answer-text">{question.correct_answer}</span>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -211,11 +220,34 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                 <label>Question Type</label>
                 <select
                   value={question.question_type}
-                  onChange={(e) => updateQuestionField('question_type', e.target.value)}
+                  onChange={(e) => {
+                    const newType = e.target.value as 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank';
+                    updateQuestionField('question_type', newType);
+                    
+                    // Update options based on question type
+                    let newOptions: QuizOption[] = [];
+                    if (newType === 'multiple_choice') {
+                      newOptions = [
+                        { option_letter: 'A', option_text: '', is_correct: false },
+                        { option_letter: 'B', option_text: '', is_correct: false },
+                        { option_letter: 'C', option_text: '', is_correct: false },
+                        { option_letter: 'D', option_text: '', is_correct: false },
+                      ];
+                    } else if (newType === 'true_false') {
+                      newOptions = [
+                        { option_letter: 'A', option_text: 'True', is_correct: false },
+                        { option_letter: 'B', option_text: 'False', is_correct: false },
+                      ];
+                    } else if (newType === 'short_answer' || newType === 'fill_in_blank') {
+                      newOptions = []; // No options for short answer or fill in blank
+                    }
+                    updateQuestionField('options', newOptions);
+                  }}
                 >
                   <option value="multiple_choice">Multiple Choice</option>
                   <option value="true_false">True/False</option>
                   <option value="short_answer">Short Answer</option>
+                  <option value="fill_in_blank">Fill in the Blank</option>
                 </select>
               </div>
               
@@ -320,6 +352,36 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+            
+            {(question.question_type === 'short_answer' || question.question_type === 'fill_in_blank') && (
+              <div className="correct-answer-section">
+                <div className="section-header">
+                  <h3>Correct Answer</h3>
+                </div>
+                <div className="form-group full-width">
+                  <label>
+                    {question.question_type === 'fill_in_blank' 
+                      ? 'Expected Answer (what should fill the blank)' 
+                      : 'Acceptable Answer(s)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={question.correct_answer || ''}
+                    onChange={(e) => updateQuestionField('correct_answer', e.target.value)}
+                    placeholder={
+                      question.question_type === 'fill_in_blank' 
+                        ? 'e.g., weathering' 
+                        : 'Enter the correct answer...'
+                    }
+                  />
+                  <small className="help-text">
+                    {question.question_type === 'fill_in_blank' 
+                      ? 'Tip: Use underscores (___) or brackets (__________) in your question text to indicate where students should fill in the answer.'
+                      : 'For multiple acceptable answers, separate them with commas (e.g., "answer1, answer2").'}
+                  </small>
                 </div>
               </div>
             )}

@@ -39,7 +39,7 @@ app.use('/api/questions', questionsRouter);
 app.use('/api/lessons', lessonsRouter);
 app.use('/api/quizzes', quizzesRouter);
 app.use('/api/quiz-questions', quizQuestionsRouter);
-app.use('/api', quizDataProxyRouter);
+app.use('/api/quiz-data', quizDataProxyRouter);
 app.use('/api/media', mediaRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/schema', schemaRouter);
