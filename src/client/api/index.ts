@@ -80,6 +80,15 @@ export const getQuizzes = (params: { topic_id?: string; lesson_id?: string }) =>
 export const getQuiz = (id: string) => 
   api.get<ApiResponse<any>>(`/quizzes/${id}`);
 
+export const createQuiz = (data: any) => 
+  api.post<ApiResponse<any>>('/quizzes', data);
+
+export const updateQuiz = (id: string, data: any) => 
+  api.post<ApiResponse<any>>('/quizzes', { ...data, id });
+
+export const deleteQuiz = (id: string) => 
+  api.delete<ApiResponse<void>>(`/quizzes/${id}`);
+
 // Media Upload
 export const uploadMedia = (file: File, description?: string) => {
   const formData = new FormData();

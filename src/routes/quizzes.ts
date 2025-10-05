@@ -6,16 +6,9 @@ const router = Router();
 // Get all quizzes
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const params: any = {};
-    if (req.query.topic_id) {
-      const response = await d1Client.get(`/topics/${req.query.topic_id}/quizzes`, { params });
-      res.json(response.data);
-    } else if (req.query.lesson_id) {
-      const response = await d1Client.get(`/lessons/${req.query.lesson_id}/quizzes`, { params });
-      res.json(response.data);
-    } else {
-      res.status(400).json({ error: 'topic_id or lesson_id is required' });
-    }
+    const queryString = req.url.split('?')[1] || '';
+    const response = await d1Client.get(`/quizzes${queryString ? '?' + queryString : ''}`);
+    res.json(response.data);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -24,17 +17,27 @@ router.get('/', async (req: Request, res: Response) => {
 // Get quiz by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const response = await d1Client.get(`/quiz/${req.params.id}`);
+    const response = await d1Client.get(`/quizzes/${req.params.id}`);
     res.json(response.data);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Create/Update quiz
+// Create quiz
 router.post('/', async (req: Request, res: Response) => {
   try {
     const response = await d1Client.post('/quizzes', req.body);
+    res.json(response.data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update quiz
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const response = await d1Client.put(`/quizzes/${req.params.id}`, req.body);
     res.json(response.data);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { getQuizzes, getTopics } from '../api';
+import { getQuizzes, getTopics, createQuiz, updateQuiz, deleteQuiz } from '../api';
 import { Topic as TopicType } from '../types';
 
 interface Quiz {
@@ -113,10 +113,7 @@ const TopicQuizzes: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setIsEditMode(false);
-    setEditingQuizId(null);
+  const resetForm = () => {
     setFormData({
       name: '',
       quiz_type: 'multiple_choice',
@@ -124,6 +121,13 @@ const TopicQuizzes: React.FC = () => {
       order_index: 1,
       is_published: false
     });
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setIsEditMode(false);
+    setEditingQuizId(null);
+    resetForm();
   };
 
   const handleSaveQuiz = async () => {
@@ -141,43 +145,57 @@ const TopicQuizzes: React.FC = () => {
           id: editingQuizId
         };
 
-        alert(`Quiz would be updated with:\n\n${JSON.stringify(quizData, null, 2)}\n\nAPI endpoint needed: PUT /api/quizzes/${editingQuizId}`);
+        console.log('Updating quiz:', quizData);
+        const response = await updateQuiz(editingQuizId, quizData);
         
-        // Simulate updating local state (remove this when API is ready)
-        setQuizzes(quizzes.map(quiz => 
-          quiz.id === editingQuizId 
-            ? { 
-                ...quiz, 
-                ...formData, 
-                updated_at: new Date().toISOString() 
-              }
-            : quiz
-        ));
+        if (response.data.success) {
+          // Update local state with the updated quiz
+          setQuizzes(quizzes.map(quiz => 
+            quiz.id === editingQuizId 
+              ? { 
+                  ...quiz, 
+                  ...formData, 
+                  updated_at: new Date().toISOString() 
+                }
+              : quiz
+          ));
+          
+          setIsModalOpen(false);
+          setIsEditMode(false);
+          setEditingQuizId(null);
+          resetForm();
+          alert('Quiz updated successfully!');
+        } else {
+          alert('Failed to update quiz: ' + (response.data.error || 'Unknown error'));
+        }
       } else {
         // Create new quiz
         const quizData = {
           ...formData,
-          topic_id: topicId,
-          id: `quiz_${Date.now()}` // Generate a temporary ID
+          topic_id: topicId
         };
 
-        alert(`Quiz would be created with:\n\n${JSON.stringify(quizData, null, 2)}\n\nAPI endpoint needed: POST /api/quizzes`);
+        console.log('Creating quiz:', quizData);
+        const response = await createQuiz(quizData);
         
-        // Simulate adding to local state (remove this when API is ready)
-        const newQuiz: Quiz = {
-          ...quizData,
-          topic_id: topicId!,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          question_count: 0
-        };
-        
-        setQuizzes([...quizzes, newQuiz]);
+        if (response.data.success) {
+          // Add the new quiz to local state
+          const newQuiz: Quiz = {
+            ...response.data.data,
+            question_count: 0
+          };
+          
+          setQuizzes([...quizzes, newQuiz]);
+          setIsModalOpen(false);
+          resetForm();
+          alert('Quiz created successfully!');
+        } else {
+          alert('Failed to create quiz: ' + (response.data.error || 'Unknown error'));
+        }
       }
-      
-      handleCloseModal();
-    } catch (err: any) {
-      alert(`Failed to ${isEditMode ? 'update' : 'create'} quiz: ` + err.message);
+    } catch (error: any) {
+      console.error('Error saving quiz:', error);
+      alert('Error saving quiz: ' + (error.response?.data?.error || error.message || 'Unknown error'));
     }
   };
 
