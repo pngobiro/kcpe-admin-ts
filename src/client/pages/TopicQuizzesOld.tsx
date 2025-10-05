@@ -3,6 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getQuizzes, getTopics } from '../api';
 import { Topic as TopicType } from '../types';
 
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getQuizzes, getTopics } from '../api';
+import { Topic as TopicType } from '../types';
+
 interface Quiz {
   id: string;
   name: string;
@@ -58,12 +63,23 @@ const TopicQuizzes: React.FC = () => {
   };
 
   const handleTogglePublished = async (quiz: Quiz) => {
-    alert(`Toggle publish status for quiz: ${quiz.name}\nCurrent status: ${quiz.is_published ? 'Published' : 'Draft'}\n\nUpdate API endpoint needed to implement this feature.`);
+    try {
+      // For now, just show an alert since updateQuiz is not available
+      alert(`Toggle publish status for quiz: ${quiz.name}\nCurrent status: ${quiz.is_published ? 'Published' : 'Draft'}\n\nAPI endpoint needed: PUT /api/quizzes/${quiz.id}`);
+    } catch (err: any) {
+      alert('Failed to toggle quiz status: ' + err.message);
+    }
   };
 
   const handleDelete = async (quizId: string) => {
     if (!confirm('Are you sure you want to delete this quiz?')) return;
-    alert(`Delete quiz: ${quizId}\n\nDelete API endpoint needed to implement this feature.`);
+
+    try {
+      // For now, just show an alert since deleteQuiz is not available
+      alert(`Delete quiz: ${quizId}\n\nAPI endpoint needed: DELETE /api/quizzes/${quizId}`);
+    } catch (err: any) {
+      alert('Failed to delete quiz: ' + err.message);
+    }
   };
 
   if (loading) {

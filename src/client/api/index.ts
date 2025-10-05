@@ -73,4 +73,8 @@ export const updateTopic = (id: string, data: TopicFormData) => {
 };
 export const deleteTopic = (id: string) => api.delete<ApiResponse<void>>(`/topics/${id}`);
 
+// Quizzes
+export const getQuizzes = (params: { topic_id?: string; lesson_id?: string }) => 
+  api.get<ApiResponse<any[]>>('/quizzes', { params });
+
 export default api;

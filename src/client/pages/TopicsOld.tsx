@@ -21,7 +21,7 @@ const Topics: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState<string>(subjectId || '');
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
   const [urlFormData, setUrlFormData] = useState({ topicId: '', url: '' });
-  const [quizCounts, setQuizCounts] = useState<Record<string, number>>({});
+  const [quizCounts, setQuizCounts] = useState<{ [topicId: string]: number }>({});
 
   useEffect(() => {
     fetchSubjects();
@@ -36,6 +36,7 @@ const Topics: React.FC = () => {
   useEffect(() => {
     if (selectedSubject) {
       fetchTopics();
+      // Find and set the current subject for breadcrumb
       const subject = subjects.find(s => s.id === selectedSubject);
       setCurrentSubject(subject || null);
     }
@@ -59,6 +60,7 @@ const Topics: React.FC = () => {
       
       // Fetch quiz counts for each topic
       await fetchQuizCounts(topicsData);
+      
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch topics');
@@ -68,18 +70,23 @@ const Topics: React.FC = () => {
   };
 
   const fetchQuizCounts = async (topicsData: Topic[]) => {
-    const counts: Record<string, number> = {};
-    
-    for (const topic of topicsData) {
-      try {
-        const response = await getQuizzes({ topic_id: topic.id });
-        counts[topic.id] = response.data.data?.length || 0;
-      } catch (err) {
-        counts[topic.id] = 0;
+    try {
+      const counts: { [topicId: string]: number } = {};
+      
+      // Fetch quiz count for each topic
+      for (const topic of topicsData) {
+        try {
+          const quizResponse = await getQuizzes({ topic_id: topic.id });
+          counts[topic.id] = quizResponse.data.data?.length || 0;
+        } catch (err) {
+          counts[topic.id] = 0; // Default to 0 if failed to fetch
+        }
       }
+      
+      setQuizCounts(counts);
+    } catch (err) {
+      console.error('Error fetching quiz counts:', err);
     }
-    
-    setQuizCounts(counts);
   };
 
   const handleAdd = () => {
@@ -111,7 +118,7 @@ const Topics: React.FC = () => {
         await createTopic(data);
       }
       setIsModalOpen(false);
-      fetchTopics();
+      fetchTopics(); // This will also refresh quiz counts
     } catch (err: any) {
       throw new Error('Failed to save topic: ' + err.message);
     }
@@ -157,7 +164,7 @@ const Topics: React.FC = () => {
       const updateData: TopicFormData = {
         name: topic.name,
         subject_id: topic.subject_id,
-        free_topic: !topic.free_topic,
+        free_topic: !topic.free_topic, // Toggle the current status
         summary_pdf: topic.summary_pdf || '',
         quiz_pdf: topic.quiz_pdf || '',
         topic_url: topic.topic_url || '',
@@ -166,7 +173,7 @@ const Topics: React.FC = () => {
       };
 
       await updateTopic(topic.id, updateData);
-      fetchTopics();
+      fetchTopics(); // Refresh the topics list and quiz counts
     } catch (err: any) {
       alert('Failed to toggle free status: ' + err.message);
     }
@@ -174,11 +181,8 @@ const Topics: React.FC = () => {
 
   if (loading && !topics.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
-          <div className="text-xl font-semibold text-gray-700">Loading topics...</div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-600">Loading topics...</div>
       </div>
     );
   }
@@ -402,387 +406,376 @@ const Topics: React.FC = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-5">
-                            <div className="flex items-center space-x-3">
-                              <span className={`px-4 py-2 text-sm font-bold rounded-full shadow-sm border-2 ${
-                                topic.free_topic 
-                                  ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white border-green-300' 
-                                  : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white border-gray-300'
-                              }`}>
-                                {topic.free_topic ? '🆓 Free' : '💰 Paid'}
-                              </span>
-                              
-                              {/* Toggle Switch */}
-                              <button
-                                onClick={() => handleToggleFreeStatus(topic)}
-                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-offset-2 shadow-lg ${
-                                  topic.free_topic 
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 focus:ring-green-300' 
-                                    : 'bg-gradient-to-r from-gray-400 to-gray-500 focus:ring-gray-300'
-                                }`}
-                                title={topic.free_topic ? 'Click to make paid' : 'Click to make free'}
-                              >
-                                <span
-                                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
-                                    topic.free_topic ? 'translate-x-6' : 'translate-x-1'
-                                  }`}
-                                />
-                              </button>
-                            </div>
-                          </td>
-                          <td className="px-6 py-5">
-                            <button
-                              onClick={() => navigate(`/topics/${topic.id}/quizzes`)}
-                              className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-                            >
-                              <span>❓</span>
-                              <span className="font-semibold">{quizCounts[topic.id] || 0}</span>
-                              <span className="text-sm">Quiz{(quizCounts[topic.id] || 0) !== 1 ? 'es' : ''}</span>
-                            </button>
-                          </td>
-                          <td className="px-6 py-5">
-                            <span className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-full shadow-lg">
-                              {topic.order_index}
-                            </span>
-                          </td>
-                          <td className="px-6 py-5">
-                            <span className={`inline-flex items-center space-x-2 px-4 py-2 text-sm font-bold rounded-full shadow-sm border-2 ${
-                              topic.is_published 
-                                ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white border-green-300' 
-                                : 'bg-gradient-to-r from-red-400 to-pink-500 text-white border-red-300'
-                            }`}>
-                              <span>{topic.is_published ? '✅' : '⏸️'}</span>
-                              <span>{topic.is_published ? 'Published' : 'Draft'}</span>
-                            </span>
-                          </td>
-                          <td className="px-6 py-5">
-                            <div className="flex items-center space-x-2">
-                              <button
-                                onClick={() => handleEdit(topic)}
-                                className="inline-flex items-center space-x-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
-                              >
-                                <span>✏️</span>
-                                <span className="font-medium">Edit</span>
-                              </button>
-                              <button
-                                onClick={() => handleDelete(topic.id)}
-                                className="inline-flex items-center space-x-1 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
-                              >
-                                <span>🗑️</span>
-                                <span className="font-medium">Delete</span>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            topic.free_topic ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {topic.free_topic ? 'Free' : 'Paid'}
+                          </span>
+                          
+                          {/* Toggle Switch */}
+                          <button
+                            onClick={() => handleToggleFreeStatus(topic)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                              topic.free_topic ? 'bg-green-600' : 'bg-gray-200'
+                            }`}
+                            title={topic.free_topic ? 'Click to make paid' : 'Click to make free'}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                topic.free_topic ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-900 font-medium">
+                            {quizCounts[topic.id] || 0}
+                          </span>
+                          <button
+                            onClick={() => navigate(`/topics/${topic.id}/quizzes`)}
+                            className="text-purple-600 hover:text-purple-900 text-xs underline"
+                            title="View quizzes"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {topic.order_index}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          topic.is_published ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {topic.is_published ? 'Published' : 'Draft'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleEdit(topic)}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(topic.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
-        {/* Topic Modal */}
-        <TopicModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSave}
-          topic={editingTopic}
-          subjects={subjects}
-          defaultSubjectId={selectedSubject}
-        />
+      {/* Topic Modal */}
+      <TopicModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        topic={editingTopic}
+        subjects={subjects}
+        defaultSubjectId={selectedSubject}
+      />
 
-        {/* URL Edit Modal */}
-        {isUrlModalOpen && createPortal(
-          <>
-            <style>{`
-              @keyframes modalSlideIn {
-                from { 
-                  opacity: 0; 
-                  transform: scale(0.95) translateY(-10px); 
-                }
-                to { 
-                  opacity: 1; 
-                  transform: scale(1) translateY(0); 
-                }
+      {/* URL Edit Modal */}
+      {isUrlModalOpen && createPortal(
+        <>
+          <style>{`
+            @keyframes modalSlideIn {
+              from { 
+                opacity: 0; 
+                transform: scale(0.95) translateY(-10px); 
               }
-              @keyframes modalBackdropIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
+              to { 
+                opacity: 1; 
+                transform: scale(1) translateY(0); 
               }
-            `}</style>
+            }
+            @keyframes modalBackdropIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+          `}</style>
+          <div 
+            className="modal-overlay"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+              zIndex: 10000,
+              backdropFilter: 'blur(4px)',
+              animation: 'modalBackdropIn 0.2s ease-out'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                handleCancelUrl();
+              }
+            }}
+          >
             <div 
-              className="modal-overlay"
+              className="modal-content"
               style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '1rem',
-                zIndex: 10000,
-                backdropFilter: 'blur(4px)',
-                animation: 'modalBackdropIn 0.2s ease-out'
+                backgroundColor: 'white',
+                borderRadius: '16px',
+                maxWidth: '500px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                animation: 'modalSlideIn 0.2s ease-out'
               }}
-              onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                  handleCancelUrl();
-                }
-              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div 
-                className="modal-content"
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '16px',
-                  maxWidth: '500px',
-                  width: '100%',
-                  maxHeight: '90vh',
-                  overflow: 'auto',
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                  animation: 'modalSlideIn 0.2s ease-out'
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Modal Header */}
-                <div style={{
-                  padding: '2rem 2rem 0 2rem',
-                  borderBottom: '1px solid #e5e7eb',
-                  position: 'relative'
-                }}>
-                  <button
-                    onClick={handleCancelUrl}
-                    style={{
-                      position: 'absolute',
-                      top: '1.5rem',
-                      right: '1.5rem',
-                      background: '#f3f4f6',
-                      border: 'none',
-                      fontSize: '1.25rem',
-                      color: '#6b7280',
-                      cursor: 'pointer',
-                      padding: '0.5rem',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '2rem',
-                      height: '2rem',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseOver={(e) => {
-                      const target = e.target as HTMLButtonElement;
-                      target.style.backgroundColor = '#e5e7eb';
-                      target.style.color = '#374151';
-                    }}
-                    onMouseOut={(e) => {
-                      const target = e.target as HTMLButtonElement;
-                      target.style.backgroundColor = '#f3f4f6';
-                      target.style.color = '#6b7280';
-                    }}
-                  >
-                    ✕
-                  </button>
-
-                  <div style={{
+              {/* Modal Header */}
+              <div style={{
+                padding: '2rem 2rem 0 2rem',
+                borderBottom: '1px solid #e5e7eb',
+                position: 'relative'
+              }}>
+                <button
+                  onClick={handleCancelUrl}
+                  style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    right: '1.5rem',
+                    background: '#f3f4f6',
+                    border: 'none',
+                    fontSize: '1.25rem',
+                    color: '#6b7280',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                    borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
-                    marginBottom: '1.5rem'
-                  }}>
-                    <div style={{
-                      backgroundColor: '#dbeafe',
-                      borderRadius: '12px',
-                      padding: '0.75rem',
-                      fontSize: '1.5rem'
-                    }}>
-                      🔗
-                    </div>
-                    <div>
-                      <h2 style={{
-                        fontSize: '1.75rem',
-                        fontWeight: 'bold',
-                        color: '#111827',
-                        margin: '0'
-                      }}>
-                        {urlFormData.url ? 'Edit Topic URL' : 'Add Topic URL'}
-                      </h2>
-                      <div style={{
-                        fontSize: '0.875rem',
-                        color: '#6b7280',
-                        marginTop: '0.25rem'
-                      }}>
-                        Topic: <span style={{ fontWeight: '600', color: '#374151' }}>
-                          {topics.find(t => t.id === urlFormData.topicId)?.name || 'Unknown Topic'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    justifyContent: 'center',
+                    width: '2rem',
+                    height: '2rem',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    const target = e.target as HTMLButtonElement;
+                    target.style.backgroundColor = '#e5e7eb';
+                    target.style.color = '#374151';
+                  }}
+                  onMouseOut={(e) => {
+                    const target = e.target as HTMLButtonElement;
+                    target.style.backgroundColor = '#f3f4f6';
+                    target.style.color = '#6b7280';
+                  }}
+                >
+                  ✕
+                </button>
 
-                {/* Modal Body */}
-                <div style={{ padding: '2rem' }}>
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: '#374151',
-                      marginBottom: '0.75rem'
-                    }}>
-                      Topic URL *
-                    </label>
-                    <input
-                      type="url"
-                      value={urlFormData.url}
-                      onChange={(e) => setUrlFormData({ ...urlFormData, url: e.target.value })}
-                      placeholder="https://example.com/topic-content"
-                      autoFocus
-                      style={{
-                        width: '100%',
-                        padding: '1rem',
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '12px',
-                        fontSize: '0.875rem',
-                        outline: 'none',
-                        transition: 'all 0.2s',
-                        boxSizing: 'border-box',
-                        fontFamily: 'inherit'
-                      }}
-                      onFocus={(e) => {
-                        const target = e.target as HTMLInputElement;
-                        target.style.borderColor = '#3b82f6';
-                        target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        const target = e.target as HTMLInputElement;
-                        target.style.borderColor = '#e5e7eb';
-                        target.style.boxShadow = 'none';
-                      }}
-                    />
-                    <p style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      marginTop: '0.75rem',
-                      lineHeight: '1.5'
-                    }}>
-                      {urlFormData.url ? 
-                        '✏️ Update the URL where students can access this topic\'s content' : 
-                        '📝 Enter the URL where students can access this topic\'s content'
-                      }
-                    </p>
-                    
-                    {urlFormData.url && (
-                      <div style={{ 
-                        marginTop: '1rem',
-                        padding: '0.75rem',
-                        backgroundColor: '#f0f9ff',
-                        borderRadius: '8px',
-                        border: '1px solid #e0f2fe'
-                      }}>
-                        <a 
-                          href={urlFormData.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            fontSize: '0.875rem',
-                            color: '#0369a1',
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontWeight: '500'
-                          }}
-                          onMouseOver={(e) => {
-                            const target = e.target as HTMLAnchorElement;
-                            target.style.textDecoration = 'underline';
-                          }}
-                          onMouseOut={(e) => {
-                            const target = e.target as HTMLAnchorElement;
-                            target.style.textDecoration = 'none';
-                          }}
-                        >
-                          🔍 Preview URL
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Modal Footer */}
                 <div style={{
-                  padding: '1.5rem 2rem 2rem',
-                  borderTop: '1px solid #e5e7eb',
                   display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '1rem'
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginBottom: '1.5rem'
                 }}>
-                  <button
-                    type="button"
-                    onClick={handleCancelUrl}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '10px',
-                      background: 'white',
-                      color: '#374151',
+                  <div style={{
+                    backgroundColor: '#dbeafe',
+                    borderRadius: '12px',
+                    padding: '0.75rem',
+                    fontSize: '1.5rem'
+                  }}>
+                    🔗
+                  </div>
+                  <div>
+                    <h2 style={{
+                      fontSize: '1.75rem',
+                      fontWeight: 'bold',
+                      color: '#111827',
+                      margin: '0'
+                    }}>
+                      {urlFormData.url ? 'Edit Topic URL' : 'Add Topic URL'}
+                    </h2>
+                    <div style={{
                       fontSize: '0.875rem',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseOver={(e) => {
-                      const target = e.target as HTMLButtonElement;
-                      target.style.backgroundColor = '#f9fafb';
-                      target.style.borderColor = '#d1d5db';
-                    }}
-                    onMouseOut={(e) => {
-                      const target = e.target as HTMLButtonElement;
-                      target.style.backgroundColor = 'white';
-                      target.style.borderColor = '#e5e7eb';
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveUrl}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      border: 'none',
-                      borderRadius: '10px',
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                      color: 'white',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-                    }}
-                    onMouseOver={(e) => {
-                      const target = e.target as HTMLButtonElement;
-                      target.style.transform = 'translateY(-1px)';
-                      target.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
-                    }}
-                    onMouseOut={(e) => {
-                      const target = e.target as HTMLButtonElement;
-                      target.style.transform = 'translateY(0)';
-                      target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-                    }}
-                  >
-                    {urlFormData.url ? '💾 Update URL' : '➕ Add URL'}
-                  </button>
+                      color: '#6b7280',
+                      marginTop: '0.25rem'
+                    }}>
+                      Topic: <span style={{ fontWeight: '600', color: '#374151' }}>
+                        {topics.find(t => t.id === urlFormData.topicId)?.name || 'Unknown Topic'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              {/* Modal Body */}
+              <div style={{ padding: '2rem' }}>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    marginBottom: '0.75rem'
+                  }}>
+                    Topic URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={urlFormData.url}
+                    onChange={(e) => setUrlFormData({ ...urlFormData, url: e.target.value })}
+                    placeholder="https://example.com/topic-content"
+                    autoFocus
+                    style={{
+                      width: '100%',
+                      padding: '1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '12px',
+                      fontSize: '0.875rem',
+                      outline: 'none',
+                      transition: 'all 0.2s',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
+                    }}
+                    onFocus={(e) => {
+                      const target = e.target as HTMLInputElement;
+                      target.style.borderColor = '#3b82f6';
+                      target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      const target = e.target as HTMLInputElement;
+                      target.style.borderColor = '#e5e7eb';
+                      target.style.boxShadow = 'none';
+                    }}
+                  />
+                  <p style={{
+                    fontSize: '0.75rem',
+                    color: '#6b7280',
+                    marginTop: '0.75rem',
+                    lineHeight: '1.5'
+                  }}>
+                    {urlFormData.url ? 
+                      '✏️ Update the URL where students can access this topic\'s content' : 
+                      '📝 Enter the URL where students can access this topic\'s content'
+                    }
+                  </p>
+                  
+                  {urlFormData.url && (
+                    <div style={{ 
+                      marginTop: '1rem',
+                      padding: '0.75rem',
+                      backgroundColor: '#f0f9ff',
+                      borderRadius: '8px',
+                      border: '1px solid #e0f2fe'
+                    }}>
+                      <a 
+                        href={urlFormData.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '0.875rem',
+                          color: '#0369a1',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          fontWeight: '500'
+                        }}
+                        onMouseOver={(e) => {
+                          const target = e.target as HTMLAnchorElement;
+                          target.style.textDecoration = 'underline';
+                        }}
+                        onMouseOut={(e) => {
+                          const target = e.target as HTMLAnchorElement;
+                          target.style.textDecoration = 'none';
+                        }}
+                      >
+                        � Preview URL
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{
+                padding: '1.5rem 2rem 2rem',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '1rem'
+              }}>
+                <button
+                  type="button"
+                  onClick={handleCancelUrl}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    background: 'white',
+                    color: '#374151',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    const target = e.target as HTMLButtonElement;
+                    target.style.backgroundColor = '#f9fafb';
+                    target.style.borderColor = '#d1d5db';
+                  }}
+                  onMouseOut={(e) => {
+                    const target = e.target as HTMLButtonElement;
+                    target.style.backgroundColor = 'white';
+                    target.style.borderColor = '#e5e7eb';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveUrl}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    color: 'white',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                  }}
+                  onMouseOver={(e) => {
+                    const target = e.target as HTMLButtonElement;
+                    target.style.transform = 'translateY(-1px)';
+                    target.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
+                  }}
+                  onMouseOut={(e) => {
+                    const target = e.target as HTMLButtonElement;
+                    target.style.transform = 'translateY(0)';
+                    target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+                  }}
+                >
+                  {urlFormData.url ? '💾 Update URL' : '➕ Add URL'}
+                </button>
+              </div>
             </div>
-          </>,
-          document.body
-        )}
-      </div>
+          </div>
+        </>,
+        document.body
+      )}
     </div>
   );
 };
