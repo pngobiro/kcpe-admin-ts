@@ -2,37 +2,40 @@ import { Router, Request, Response } from 'express';
 
 const router = Router();
 
-// Proxy for fetching quiz data with authentication
-router.get('/quiz-data-proxy', async (req: Request, res: Response) => {
+// Proxy quiz data with authentication
+router.get('/proxy', async (req: Request, res: Response) => {
   try {
     const { url } = req.query;
     
     if (!url || typeof url !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: 'URL parameter is required'
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Quiz data URL is required' 
       });
     }
 
     console.log('Proxying request to:', url);
 
-    // Add authentication headers if available
-    const headers: HeadersInit = {
+    // Add authentication headers for Cloudflare API requests
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    // Add API key if available in environment
-    if (process.env.CLOUDFLARE_API_KEY) {
-      headers['Authorization'] = `Bearer ${process.env.CLOUDFLARE_API_KEY}`;
+    // Add API key if the URL is from our Cloudflare domain
+    const apiKey = process.env.CLOUDFLARE_API_KEY;
+    if (url.includes('east-africa-education-api.pngobiro.workers.dev') && apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+      headers['X-API-Key'] = apiKey;
+      console.log('Adding authentication for Cloudflare API');
     }
 
-    const response = await fetch(url, { headers });
-    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
     if (!response.ok) {
-      return res.status(response.status).json({
-        success: false,
-        error: `Failed to fetch quiz data: ${response.status} ${response.statusText}`
-      });
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -43,9 +46,9 @@ router.get('/quiz-data-proxy', async (req: Request, res: Response) => {
 
   } catch (error: any) {
     console.error('Quiz data proxy error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to fetch quiz data'
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to fetch quiz data' 
     });
   }
 });

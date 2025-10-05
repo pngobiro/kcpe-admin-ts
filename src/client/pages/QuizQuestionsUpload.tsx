@@ -75,7 +75,7 @@ const QuizQuestionsUpload: React.FC = () => {
             
             try {
               console.log('Attempting to fetch via proxy...');
-              questionsResponse = await fetch(`/api/quiz-data-proxy?url=${encodeURIComponent(quizData.quiz_data_url)}`);
+              questionsResponse = await fetch(`/api/quiz-data/proxy?url=${encodeURIComponent(quizData.quiz_data_url)}`);
               
               if (questionsResponse.ok) {
                 const proxyData = await questionsResponse.json();
@@ -109,50 +109,8 @@ const QuizQuestionsUpload: React.FC = () => {
               throw new Error(`API Error: ${questionsData.error}`);
             }
             
-            // Handle different possible JSON structures
-            let questionsArray = [];
-            if (Array.isArray(questionsData)) {
-              questionsArray = questionsData;
-            } else if (questionsData.questions && Array.isArray(questionsData.questions)) {
-              questionsArray = questionsData.questions;
-            } else if (questionsData.data && Array.isArray(questionsData.data)) {
-              questionsArray = questionsData.data;
-            }
-            
-            if (questionsArray.length > 0) {
-              // Validate and normalize the questions structure
-              const normalizedQuestions = questionsArray.map((q: any, index: number) => ({
-                id: q.id || undefined,
-                question_number: q.question_number || index + 1,
-                question_text: q.question_text || q.question || '',
-                question_image: q.question_image || q.image || undefined,
-                question_video: q.question_video || q.video || undefined,
-                question_audio: q.question_audio || q.audio || undefined,
-                question_type: q.question_type || q.type || 'multiple_choice',
-                options: q.options ? q.options.map((opt: any, optIndex: number) => ({
-                  option_letter: opt.option_letter || opt.letter || String.fromCharCode(65 + optIndex),
-                  option_text: opt.option_text || opt.text || '',
-                  option_image: opt.option_image || opt.image || undefined,
-                  is_correct: opt.is_correct || opt.correct || false
-                })) : [
-                  { option_letter: 'A', option_text: '', is_correct: false },
-                  { option_letter: 'B', option_text: '', is_correct: false },
-                  { option_letter: 'C', option_text: '', is_correct: false },
-                  { option_letter: 'D', option_text: '', is_correct: false },
-                ],
-                correct_answer: q.correct_answer || q.answer || undefined,
-                explanation: q.explanation || undefined,
-                explanation_image: q.explanation_image || undefined,
-                explanation_video: q.explanation_video || undefined,
-                marks: q.marks || q.points || 1,
-              }));
-              
-              setQuestions(normalizedQuestions);
-              console.log(`Loaded ${normalizedQuestions.length} existing questions`);
-            } else {
-              // No questions found, start with empty template
-              initializeEmptyQuestions();
-            }
+            // Process the question data
+            processQuestionData(questionsData);
           } catch (fetchError) {
             console.error('Error fetching questions from URL:', fetchError);
             // Show user-friendly error message
@@ -191,6 +149,75 @@ const QuizQuestionsUpload: React.FC = () => {
         marks: 1,
       },
     ]);
+  };
+
+  const processQuestionData = (questionsData: any) => {
+    // Handle different possible JSON structures
+    let questionsArray = [];
+    if (Array.isArray(questionsData)) {
+      questionsArray = questionsData;
+    } else if (questionsData.questions && Array.isArray(questionsData.questions)) {
+      questionsArray = questionsData.questions;
+    } else if (questionsData.data && Array.isArray(questionsData.data)) {
+      questionsArray = questionsData.data;
+    }
+    
+    if (questionsArray.length > 0) {
+      // Validate and normalize the questions structure
+      const normalizedQuestions = questionsArray.map((q: any, index: number) => {
+        // Handle Cloudflare API format vs standard format
+        const questionType = q.type === 'MULTIPLE_CHOICE' ? 'multiple_choice' : 
+                           q.type === 'TRUE_FALSE' ? 'true_false' : 
+                           q.question_type || 'multiple_choice';
+        
+        let options = [];
+        if (q.options && Array.isArray(q.options)) {
+          // Cloudflare API format
+          options = q.options.map((opt: any, optIndex: number) => ({
+            option_letter: opt.name || opt.option_letter || String.fromCharCode(65 + optIndex),
+            option_text: opt.optionText || opt.option_text || opt.text || '',
+            option_image: opt.optionImage || opt.option_image || opt.image || undefined,
+            is_correct: opt.isCorrectAnswer || opt.is_correct || opt.correct || false
+          }));
+        } else if (q.type === 'TRUE_FALSE') {
+          // True/False question
+          options = [
+            { option_letter: 'A', option_text: 'True', is_correct: q.isCorrectAnswer === true },
+            { option_letter: 'B', option_text: 'False', is_correct: q.isCorrectAnswer === false },
+          ];
+        } else {
+          // Default empty options
+          options = [
+            { option_letter: 'A', option_text: '', is_correct: false },
+            { option_letter: 'B', option_text: '', is_correct: false },
+            { option_letter: 'C', option_text: '', is_correct: false },
+            { option_letter: 'D', option_text: '', is_correct: false },
+          ];
+        }
+
+        return {
+          id: q.id || undefined,
+          question_number: q.number || q.question_number || index + 1,
+          question_text: q.quizText || q.question_text || q.question || '',
+          question_image: q.quizImage || q.question_image || q.image || undefined,
+          question_video: q.quizVideo || q.question_video || q.video || undefined,
+          question_audio: q.quizAudio || q.question_audio || q.audio || undefined,
+          question_type: questionType,
+          options: options,
+          correct_answer: q.correctAnswer || q.correct_answer || q.answer || undefined,
+          explanation: q.explanation || undefined,
+          explanation_image: q.explanation_image || undefined,
+          explanation_video: q.explanation_video || undefined,
+          marks: q.marks || q.points || 1,
+        };
+      });
+      
+      setQuestions(normalizedQuestions);
+      console.log(`Loaded ${normalizedQuestions.length} existing questions`);
+    } else {
+      // No questions found, start with empty template
+      initializeEmptyQuestions();
+    }
   };
 
   const handleSave = async () => {
