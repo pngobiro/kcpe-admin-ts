@@ -77,4 +77,22 @@ export const deleteTopic = (id: string) => api.delete<ApiResponse<void>>(`/topic
 export const getQuizzes = (params: { topic_id?: string; lesson_id?: string }) => 
   api.get<ApiResponse<any[]>>('/quizzes', { params });
 
+export const getQuiz = (id: string) => 
+  api.get<ApiResponse<any>>(`/quizzes/${id}`);
+
+// Media Upload
+export const uploadMedia = (file: File, description?: string) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (description) {
+    formData.append('description', description);
+  }
+  
+  return api.post<ApiResponse<{ url: string; id: string }>>('/media/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
 export default api;

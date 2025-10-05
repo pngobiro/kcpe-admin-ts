@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { getQuizzes, getTopics } from '../api';
 import { Topic as TopicType } from '../types';
 
@@ -16,6 +17,14 @@ interface Quiz {
   question_count?: number;
 }
 
+interface QuizFormData {
+  name: string;
+  quiz_type: string;
+  quiz_data_url: string;
+  order_index: number;
+  is_published: boolean;
+}
+
 const TopicQuizzes: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
@@ -23,6 +32,14 @@ const TopicQuizzes: React.FC = () => {
   const [topic, setTopic] = useState<TopicType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<QuizFormData>({
+    name: '',
+    quiz_type: 'multiple_choice',
+    quiz_data_url: '',
+    order_index: 1,
+    is_published: false
+  });
 
   useEffect(() => {
     if (topicId) {
@@ -64,6 +81,62 @@ const TopicQuizzes: React.FC = () => {
   const handleDelete = async (quizId: string) => {
     if (!confirm('Are you sure you want to delete this quiz?')) return;
     alert(`Delete quiz: ${quizId}\n\nDelete API endpoint needed to implement this feature.`);
+  };
+
+  const handleAddQuiz = () => {
+    // Set the next order index
+    const nextOrderIndex = quizzes.length > 0 ? Math.max(...quizzes.map(q => q.order_index)) + 1 : 1;
+    setFormData({
+      name: '',
+      quiz_type: 'multiple_choice',
+      quiz_data_url: '',
+      order_index: nextOrderIndex,
+      is_published: false
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      name: '',
+      quiz_type: 'multiple_choice',
+      quiz_data_url: '',
+      order_index: 1,
+      is_published: false
+    });
+  };
+
+  const handleSaveQuiz = async () => {
+    if (!formData.name.trim()) {
+      alert('Please enter a quiz name');
+      return;
+    }
+
+    try {
+      // For now, show what would be sent to the API
+      const quizData = {
+        ...formData,
+        topic_id: topicId,
+        id: `quiz_${Date.now()}` // Generate a temporary ID
+      };
+
+      alert(`Quiz would be created with:\n\n${JSON.stringify(quizData, null, 2)}\n\nAPI endpoint needed: POST /api/quizzes`);
+      
+      // Simulate adding to local state (remove this when API is ready)
+      const newQuiz: Quiz = {
+        ...quizData,
+        topic_id: topicId!,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        question_count: 0
+      };
+      
+      setQuizzes([...quizzes, newQuiz]);
+      handleCloseModal();
+    } catch (err: any) {
+      alert('Failed to create quiz: ' + err.message);
+    }
   };
 
   if (loading) {
@@ -121,7 +194,7 @@ const TopicQuizzes: React.FC = () => {
             </div>
             <button 
               className="group relative px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-              onClick={() => alert('Add Quiz functionality coming soon!')}
+              onClick={handleAddQuiz}
             >
               <span className="flex items-center space-x-2">
                 <span className="text-lg">➕</span>
@@ -205,7 +278,7 @@ const TopicQuizzes: React.FC = () => {
                           <p className="text-gray-500 mt-1">Create your first quiz for this topic!</p>
                         </div>
                         <button
-                          onClick={() => alert('Add Quiz functionality coming soon!')}
+                          onClick={handleAddQuiz}
                           className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                         >
                           ➕ Create First Quiz
@@ -291,6 +364,13 @@ const TopicQuizzes: React.FC = () => {
                       <td className="px-6 py-5">
                         <div className="flex items-center space-x-2">
                           <button
+                            onClick={() => navigate(`/quizzes/${quiz.id}/questions`)}
+                            className="inline-flex items-center space-x-1 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                          >
+                            <span>📝</span>
+                            <span>Questions</span>
+                          </button>
+                          <button
                             onClick={() => alert('Edit Quiz functionality coming soon!')}
                             className="inline-flex items-center space-x-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
                           >
@@ -313,6 +393,421 @@ const TopicQuizzes: React.FC = () => {
             </table>
           </div>
         </div>
+
+        {/* Add Quiz Modal */}
+        {isModalOpen && createPortal(
+          <>
+            <style>{`
+              @keyframes modalSlideIn {
+                from { 
+                  opacity: 0; 
+                  transform: scale(0.95) translateY(-10px); 
+                }
+                to { 
+                  opacity: 1; 
+                  transform: scale(1) translateY(0); 
+                }
+              }
+              @keyframes modalBackdropIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+            `}</style>
+            <div 
+              className="modal-overlay"
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem',
+                zIndex: 10000,
+                backdropFilter: 'blur(4px)',
+                animation: 'modalBackdropIn 0.2s ease-out'
+              }}
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  handleCloseModal();
+                }
+              }}
+            >
+              <div 
+                className="modal-content"
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  maxWidth: '600px',
+                  width: '100%',
+                  maxHeight: '90vh',
+                  overflow: 'auto',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                  animation: 'modalSlideIn 0.2s ease-out'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div style={{
+                  padding: '2rem 2rem 0 2rem',
+                  borderBottom: '1px solid #e5e7eb',
+                  position: 'relative'
+                }}>
+                  <button
+                    onClick={handleCloseModal}
+                    style={{
+                      position: 'absolute',
+                      top: '1.5rem',
+                      right: '1.5rem',
+                      background: '#f3f4f6',
+                      border: 'none',
+                      fontSize: '1.25rem',
+                      color: '#6b7280',
+                      cursor: 'pointer',
+                      padding: '0.5rem',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '2rem',
+                      height: '2rem',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => {
+                      const target = e.target as HTMLButtonElement;
+                      target.style.backgroundColor = '#e5e7eb';
+                      target.style.color = '#374151';
+                    }}
+                    onMouseOut={(e) => {
+                      const target = e.target as HTMLButtonElement;
+                      target.style.backgroundColor = '#f3f4f6';
+                      target.style.color = '#6b7280';
+                    }}
+                  >
+                    ✕
+                  </button>
+
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    marginBottom: '1.5rem'
+                  }}>
+                    <div style={{
+                      backgroundColor: '#ddd6fe',
+                      borderRadius: '12px',
+                      padding: '0.75rem',
+                      fontSize: '1.5rem'
+                    }}>
+                      ❓
+                    </div>
+                    <div>
+                      <h2 style={{
+                        fontSize: '1.75rem',
+                        fontWeight: 'bold',
+                        color: '#111827',
+                        margin: '0'
+                      }}>
+                        Add New Quiz
+                      </h2>
+                      <div style={{
+                        fontSize: '0.875rem',
+                        color: '#6b7280',
+                        marginTop: '0.25rem'
+                      }}>
+                        Create a new quiz for: <span style={{ fontWeight: '600', color: '#374151' }}>
+                          {topic?.name || 'This Topic'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Body */}
+                <div style={{ padding: '2rem' }}>
+                  <div style={{ display: 'grid', gap: '1.5rem' }}>
+                    {/* Quiz Name */}
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        marginBottom: '0.75rem'
+                      }}>
+                        Quiz Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Enter quiz name..."
+                        style={{
+                          width: '100%',
+                          padding: '1rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '12px',
+                          fontSize: '0.875rem',
+                          outline: 'none',
+                          transition: 'all 0.2s',
+                          boxSizing: 'border-box',
+                          fontFamily: 'inherit'
+                        }}
+                        onFocus={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.style.borderColor = '#8b5cf6';
+                          target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.style.borderColor = '#e5e7eb';
+                          target.style.boxShadow = 'none';
+                        }}
+                      />
+                    </div>
+
+                    {/* Quiz Type */}
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        marginBottom: '0.75rem'
+                      }}>
+                        Quiz Type
+                      </label>
+                      <select
+                        value={formData.quiz_type}
+                        onChange={(e) => setFormData({ ...formData, quiz_type: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '1rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '12px',
+                          fontSize: '0.875rem',
+                          outline: 'none',
+                          transition: 'all 0.2s',
+                          boxSizing: 'border-box',
+                          fontFamily: 'inherit',
+                          backgroundColor: 'white'
+                        }}
+                        onFocus={(e) => {
+                          const target = e.target as HTMLSelectElement;
+                          target.style.borderColor = '#8b5cf6';
+                          target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          const target = e.target as HTMLSelectElement;
+                          target.style.borderColor = '#e5e7eb';
+                          target.style.boxShadow = 'none';
+                        }}
+                      >
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                        <option value="fill_in_blank">Fill in the Blank</option>
+                        <option value="essay">Essay</option>
+                        <option value="mixed">Mixed Questions</option>
+                      </select>
+                    </div>
+
+                    {/* Quiz Data URL */}
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        marginBottom: '0.75rem'
+                      }}>
+                        Quiz Data URL
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.quiz_data_url}
+                        onChange={(e) => setFormData({ ...formData, quiz_data_url: e.target.value })}
+                        placeholder="https://example.com/quiz-data..."
+                        style={{
+                          width: '100%',
+                          padding: '1rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '12px',
+                          fontSize: '0.875rem',
+                          outline: 'none',
+                          transition: 'all 0.2s',
+                          boxSizing: 'border-box',
+                          fontFamily: 'inherit'
+                        }}
+                        onFocus={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.style.borderColor = '#8b5cf6';
+                          target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.style.borderColor = '#e5e7eb';
+                          target.style.boxShadow = 'none';
+                        }}
+                      />
+                      <p style={{
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        marginTop: '0.5rem'
+                      }}>
+                        URL where quiz questions and answers are stored
+                      </p>
+                    </div>
+
+                    {/* Order Index */}
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        marginBottom: '0.75rem'
+                      }}>
+                        Order Index
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.order_index}
+                        onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 1 })}
+                        min="1"
+                        style={{
+                          width: '100%',
+                          padding: '1rem',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '12px',
+                          fontSize: '0.875rem',
+                          outline: 'none',
+                          transition: 'all 0.2s',
+                          boxSizing: 'border-box',
+                          fontFamily: 'inherit'
+                        }}
+                        onFocus={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.style.borderColor = '#8b5cf6';
+                          target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.style.borderColor = '#e5e7eb';
+                          target.style.boxShadow = 'none';
+                        }}
+                      />
+                    </div>
+
+                    {/* Published Status */}
+                    <div>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        cursor: 'pointer'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.is_published}
+                          onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                          style={{
+                            width: '1.25rem',
+                            height: '1.25rem',
+                            accentColor: '#8b5cf6',
+                            cursor: 'pointer'
+                          }}
+                        />
+                        <span style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: '#374151'
+                        }}>
+                          Publish quiz immediately
+                        </span>
+                      </label>
+                      <p style={{
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        marginTop: '0.5rem',
+                        marginLeft: '2rem'
+                      }}>
+                        Published quizzes are visible to students
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div style={{
+                  padding: '1.5rem 2rem 2rem',
+                  borderTop: '1px solid #e5e7eb',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '1rem'
+                }}>
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      background: 'white',
+                      color: '#374151',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => {
+                      const target = e.target as HTMLButtonElement;
+                      target.style.backgroundColor = '#f9fafb';
+                      target.style.borderColor = '#d1d5db';
+                    }}
+                    onMouseOut={(e) => {
+                      const target = e.target as HTMLButtonElement;
+                      target.style.backgroundColor = 'white';
+                      target.style.borderColor = '#e5e7eb';
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveQuiz}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      border: 'none',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+                      color: 'white',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                    }}
+                    onMouseOver={(e) => {
+                      const target = e.target as HTMLButtonElement;
+                      target.style.transform = 'translateY(-1px)';
+                      target.style.boxShadow = '0 6px 16px rgba(139, 92, 246, 0.4)';
+                    }}
+                    onMouseOut={(e) => {
+                      const target = e.target as HTMLButtonElement;
+                      target.style.transform = 'translateY(0)';
+                      target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+                    }}
+                  >
+                    ➕ Create Quiz
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
       </div>
     </div>
   );
