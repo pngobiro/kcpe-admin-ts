@@ -33,6 +33,8 @@ const TopicQuizzes: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [formData, setFormData] = useState<QuizFormData>({
     name: '',
     quiz_type: 'multiple_choice',
@@ -93,11 +95,28 @@ const TopicQuizzes: React.FC = () => {
       order_index: nextOrderIndex,
       is_published: false
     });
+    setIsEditMode(false);
+    setEditingQuizId(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditQuiz = (quiz: Quiz) => {
+    setFormData({
+      name: quiz.name,
+      quiz_type: quiz.quiz_type,
+      quiz_data_url: quiz.quiz_data_url || '',
+      order_index: quiz.order_index,
+      is_published: quiz.is_published
+    });
+    setIsEditMode(true);
+    setEditingQuizId(quiz.id);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setIsEditMode(false);
+    setEditingQuizId(null);
     setFormData({
       name: '',
       quiz_type: 'multiple_choice',
@@ -114,28 +133,51 @@ const TopicQuizzes: React.FC = () => {
     }
 
     try {
-      // For now, show what would be sent to the API
-      const quizData = {
-        ...formData,
-        topic_id: topicId,
-        id: `quiz_${Date.now()}` // Generate a temporary ID
-      };
+      if (isEditMode && editingQuizId) {
+        // Edit existing quiz
+        const quizData = {
+          ...formData,
+          topic_id: topicId,
+          id: editingQuizId
+        };
 
-      alert(`Quiz would be created with:\n\n${JSON.stringify(quizData, null, 2)}\n\nAPI endpoint needed: POST /api/quizzes`);
+        alert(`Quiz would be updated with:\n\n${JSON.stringify(quizData, null, 2)}\n\nAPI endpoint needed: PUT /api/quizzes/${editingQuizId}`);
+        
+        // Simulate updating local state (remove this when API is ready)
+        setQuizzes(quizzes.map(quiz => 
+          quiz.id === editingQuizId 
+            ? { 
+                ...quiz, 
+                ...formData, 
+                updated_at: new Date().toISOString() 
+              }
+            : quiz
+        ));
+      } else {
+        // Create new quiz
+        const quizData = {
+          ...formData,
+          topic_id: topicId,
+          id: `quiz_${Date.now()}` // Generate a temporary ID
+        };
+
+        alert(`Quiz would be created with:\n\n${JSON.stringify(quizData, null, 2)}\n\nAPI endpoint needed: POST /api/quizzes`);
+        
+        // Simulate adding to local state (remove this when API is ready)
+        const newQuiz: Quiz = {
+          ...quizData,
+          topic_id: topicId!,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          question_count: 0
+        };
+        
+        setQuizzes([...quizzes, newQuiz]);
+      }
       
-      // Simulate adding to local state (remove this when API is ready)
-      const newQuiz: Quiz = {
-        ...quizData,
-        topic_id: topicId!,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        question_count: 0
-      };
-      
-      setQuizzes([...quizzes, newQuiz]);
       handleCloseModal();
     } catch (err: any) {
-      alert('Failed to create quiz: ' + err.message);
+      alert(`Failed to ${isEditMode ? 'update' : 'create'} quiz: ` + err.message);
     }
   };
 
@@ -371,7 +413,7 @@ const TopicQuizzes: React.FC = () => {
                             <span>Questions</span>
                           </button>
                           <button
-                            onClick={() => alert('Edit Quiz functionality coming soon!')}
+                            onClick={() => handleEditQuiz(quiz)}
                             className="inline-flex items-center space-x-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
                           >
                             <span>✏️</span>
@@ -511,14 +553,14 @@ const TopicQuizzes: React.FC = () => {
                         color: '#111827',
                         margin: '0'
                       }}>
-                        Add New Quiz
+                        {isEditMode ? 'Edit Quiz' : 'Add New Quiz'}
                       </h2>
                       <div style={{
                         fontSize: '0.875rem',
                         color: '#6b7280',
                         marginTop: '0.25rem'
                       }}>
-                        Create a new quiz for: <span style={{ fontWeight: '600', color: '#374151' }}>
+                        {isEditMode ? 'Update quiz details' : 'Create a new quiz'} for: <span style={{ fontWeight: '600', color: '#374151' }}>
                           {topic?.name || 'This Topic'}
                         </span>
                       </div>
@@ -800,7 +842,7 @@ const TopicQuizzes: React.FC = () => {
                       target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
                     }}
                   >
-                    ➕ Create Quiz
+                    {isEditMode ? '💾 Update Quiz' : '➕ Create Quiz'}
                   </button>
                 </div>
               </div>
