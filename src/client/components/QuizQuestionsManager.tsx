@@ -296,13 +296,15 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
               </div>
             </div>
             
-            {question.question_type === 'multiple_choice' && (
+            {(question.question_type === 'multiple_choice' || question.question_type === 'true_false') && (
               <div className="options-section">
                 <div className="section-header">
                   <h3>Answer Options</h3>
-                  <button onClick={addOption} className="btn btn-secondary btn-sm">
-                    + Add Option
-                  </button>
+                  {question.question_type === 'multiple_choice' && (
+                    <button onClick={addOption} className="btn btn-secondary btn-sm">
+                      + Add Option
+                    </button>
+                  )}
                 </div>
                 
                 <div className="options-list">
@@ -319,7 +321,7 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                             />
                             Correct Answer
                           </label>
-                          {question.options.length > 2 && (
+                          {question.question_type === 'multiple_choice' && question.options.length > 2 && (
                             <button
                               onClick={() => removeOption(optIndex)}
                               className="btn-icon delete small"
@@ -338,6 +340,7 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                           onChange={(e) => updateOption(optIndex, 'option_text', e.target.value)}
                           placeholder="Enter option text..."
                           className="option-text-input"
+                          readOnly={question.question_type === 'true_false'}
                         />
                         <div className="option-image-upload">
                           <MediaUpload
