@@ -235,26 +235,120 @@ const QuizQuestionsUpload: React.FC = () => {
     try {
       setSaving(true);
       
-      // Prepare the data for API submission
+      // Prepare the data for API submission with R2 format
       const quizData = {
-        quiz_id: quiz.id,
-        questions: questions.map(q => ({
-          ...q,
-          quiz_id: quiz.id
-        }))
+        examSetId: `examset_${new Date().getFullYear()}_${quiz.topic_id}`,
+        examSetName: `${new Date().getFullYear()} Quiz Data`,
+        subjectId: quiz.topic_id,
+        year: new Date().getFullYear(),
+        questions: questions.map((q, index) => {
+          // Convert frontend format to Cloudflare API format
+          if (q.question_type === 'multiple_choice') {
+            return {
+              number: q.question_number || index + 1,
+              type: 'MULTIPLE_CHOICE',
+              questionText: q.question_text,
+              questionImage: q.question_image || '',
+              questionPdf: '',
+              solutionText: q.explanation || '',
+              solutionImage: q.explanation_image || '',
+              solutionPdf: '',
+              solutionVideo: q.explanation_video || '',
+              solutionUrl: '',
+              part: 1,
+              paperLevel: q.marks || 1,
+              isFree: true,
+              hasParts: false,
+              options: q.options.map((opt, optIndex) => ({
+                order: optIndex + 1,
+                name: opt.option_letter,
+                optionText: opt.option_text,
+                optionImage: opt.option_image || '',
+                explanation: opt.is_correct ? 'Correct answer' : 'Incorrect answer',
+                isCorrectAnswer: opt.is_correct
+              }))
+            };
+          } else if (q.question_type === 'true_false') {
+            return {
+              number: q.question_number || index + 1,
+              type: 'TRUE_FALSE',
+              questionText: q.question_text,
+              questionImage: q.question_image || '',
+              questionPdf: '',
+              solutionText: q.explanation || '',
+              solutionImage: q.explanation_image || '',
+              solutionPdf: '',
+              solutionVideo: q.explanation_video || '',
+              solutionUrl: '',
+              part: 1,
+              paperLevel: q.marks || 1,
+              isFree: true,
+              hasParts: false,
+              isCorrectAnswer: q.options?.[0]?.is_correct || false
+            };
+          } else if (q.question_type === 'fill_in_blank') {
+            return {
+              number: q.question_number || index + 1,
+              type: 'FILL_IN_THE_BLANK',
+              questionText: q.question_text,
+              questionImage: q.question_image || '',
+              questionPdf: '',
+              solutionText: q.correct_answer || q.explanation || '',
+              solutionImage: q.explanation_image || '',
+              solutionPdf: '',
+              solutionVideo: q.explanation_video || '',
+              solutionUrl: '',
+              part: 1,
+              paperLevel: q.marks || 1,
+              isFree: true,
+              hasParts: false,
+              correctAnswer: q.correct_answer || ''
+            };
+          } else {
+            // Default to multiple choice format
+            return {
+              number: q.question_number || index + 1,
+              type: 'MULTIPLE_CHOICE',
+              questionText: q.question_text,
+              questionImage: q.question_image || '',
+              questionPdf: '',
+              solutionText: q.explanation || '',
+              solutionImage: q.explanation_image || '',
+              solutionPdf: '',
+              solutionVideo: q.explanation_video || '',
+              solutionUrl: '',
+              part: 1,
+              paperLevel: q.marks || 1,
+              isFree: true,
+              hasParts: false,
+              options: q.options.map((opt, optIndex) => ({
+                order: optIndex + 1,
+                name: opt.option_letter,
+                optionText: opt.option_text,
+                optionImage: opt.option_image || '',
+                explanation: opt.is_correct ? 'Correct answer' : 'Incorrect answer',
+                isCorrectAnswer: opt.is_correct
+              }))
+            };
+          }
+        })
       };
 
-      console.log('Saving quiz questions:', quizData);
+      console.log('Uploading quiz data to R2:', quizData);
       
-      // Here you would make an API call to save the questions
-      // For now, we'll just simulate the save
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Import the uploadQuizData function
+      const { uploadQuizData } = await import('../api');
+      const response = await uploadQuizData(quiz.id, quizData);
       
-      alert(`Successfully saved ${questions.length} questions for ${quiz.name}!`);
+      if (response.data.success) {
+        alert(`Successfully saved ${questions.length} questions to R2 storage for ${quiz.name}!\nR2 Key: ${response.data.data.r2Key}`);
+      } else {
+        throw new Error(response.data.error || 'Upload failed');
+      }
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving questions:', err);
-      alert('Failed to save questions. Please try again.');
+      alert(`Failed to save questions: ${err.message || err}`);
     } finally {
       setSaving(false);
     }
@@ -283,19 +377,41 @@ const QuizQuestionsUpload: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const jsonData = JSON.parse(e.target?.result as string);
         
         // Validate the imported data structure
         if (jsonData.questions && Array.isArray(jsonData.questions)) {
-          setQuestions(jsonData.questions);
-          alert(`Successfully imported ${jsonData.questions.length} questions!`);
+          // Process the imported questions
+          processQuestionData(jsonData);
+          
+          // Automatically save to R2 after successful import
+          if (quiz) {
+            try {
+              setSaving(true);
+              const { uploadQuizData } = await import('../api');
+              const response = await uploadQuizData(quiz.id, jsonData);
+              
+              if (response.data.success) {
+                alert(`Successfully imported and saved ${jsonData.questions.length} questions to R2 storage!\nR2 Key: ${response.data.data.r2Key}`);
+              } else {
+                alert(`Questions imported locally but failed to save to R2: ${response.data.error}`);
+              }
+            } catch (uploadError: any) {
+              console.error('Upload error:', uploadError);
+              alert(`Questions imported locally but failed to save to R2: ${uploadError.message}`);
+            } finally {
+              setSaving(false);
+            }
+          } else {
+            alert(`Successfully imported ${jsonData.questions.length} questions!`);
+          }
         } else {
           alert('Invalid file format. Please ensure the JSON contains a "questions" array.');
         }

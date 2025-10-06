@@ -89,6 +89,10 @@ export const updateQuiz = (id: string, data: any) =>
 export const deleteQuiz = (id: string) => 
   api.delete<ApiResponse<void>>(`/quizzes/${id}`);
 
+// Upload quiz data to R2 storage
+export const uploadQuizData = (quizId: string, data: any) => 
+  api.post<ApiResponse<any>>(`/quizzes/${quizId}/upload-data`, data);
+
 // Media Upload
 export const uploadMedia = (file: File, description?: string) => {
   const formData = new FormData();

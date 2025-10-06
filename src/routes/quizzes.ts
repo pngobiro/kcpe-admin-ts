@@ -64,4 +64,14 @@ router.get('/:id/questions', async (req: Request, res: Response) => {
   }
 });
 
+// Upload quiz data to R2 storage
+router.post('/:id/upload-data', async (req: Request, res: Response) => {
+  try {
+    const response = await d1Client.post(`/quizzes/${req.params.id}/upload-data`, req.body);
+    res.json(response.data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
