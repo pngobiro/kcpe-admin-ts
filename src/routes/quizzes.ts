@@ -54,4 +54,14 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// Get quiz questions
+router.get('/:id/questions', async (req: Request, res: Response) => {
+  try {
+    const response = await d1Client.get(`/quizzes/${req.params.id}/questions`);
+    res.json(response.data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

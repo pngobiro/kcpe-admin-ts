@@ -83,20 +83,30 @@ router.get('/proxy', async (req: Request, res: Response) => {
 
     console.log('Proxying request to:', url);
 
+    let fetchUrl = url;
+    
+    // If it's an r2:// URL, we need to route it through our Cloudflare worker
+    if (url.startsWith('r2://')) {
+      // Extract the quiz ID from r2://kcse-revision-content/quiz-data/quiz_cells_g10_bio.json
+      const r2Path = url.replace('r2://kcse-revision-content/', '');
+      const quizId = r2Path.replace('quiz-data/', '').replace('.json', '');
+      fetchUrl = `https://east-africa-education-api.pngobiro.workers.dev/api/quiz/data/${quizId}`;
+      console.log('Converting R2 URL to Cloudflare API URL:', fetchUrl);
+    }
+
     // Add authentication headers for Cloudflare API requests
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
     // Add API key if the URL is from our Cloudflare domain
-    const apiKey = process.env.CLOUDFLARE_API_KEY;
-    if (url.includes('east-africa-education-api.pngobiro.workers.dev') && apiKey) {
-      headers['Authorization'] = `Bearer ${apiKey}`;
-      headers['X-API-Key'] = apiKey;
+    const apiKey = process.env.CLOUDFLARE_API_KEY || 'ea_edu_api_2025_9bf6e21f5d1a4d7da1b74ca222b89eec_secure';
+    if (fetchUrl.includes('east-africa-education-api.pngobiro.workers.dev') && apiKey) {
+      headers['x-api-key'] = apiKey;
       console.log('Adding authentication for Cloudflare API');
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(fetchUrl, {
       method: 'GET',
       headers,
     });

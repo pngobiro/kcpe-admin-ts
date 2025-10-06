@@ -18,7 +18,7 @@ interface QuizQuestion {
   question_image?: string;
   question_video?: string;
   question_audio?: string;
-  question_type: 'multiple_choice' | 'true_false' | 'short_answer';
+  question_type: 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank';
   options: QuizOption[];
   correct_answer?: string;
   explanation?: string;
@@ -152,15 +152,22 @@ const QuizQuestionsUpload: React.FC = () => {
   };
 
   const processQuestionData = (questionsData: any) => {
+    console.log('Processing question data:', questionsData);
+    
     // Handle different possible JSON structures
     let questionsArray = [];
     if (Array.isArray(questionsData)) {
       questionsArray = questionsData;
     } else if (questionsData.questions && Array.isArray(questionsData.questions)) {
       questionsArray = questionsData.questions;
+    } else if (questionsData.data && questionsData.data.questions && Array.isArray(questionsData.data.questions)) {
+      // Handle Cloudflare worker response format: { success: true, data: { questions: [...] } }
+      questionsArray = questionsData.data.questions;
     } else if (questionsData.data && Array.isArray(questionsData.data)) {
       questionsArray = questionsData.data;
     }
+    
+    console.log('Found questions array:', questionsArray.length, 'questions');
     
     if (questionsArray.length > 0) {
       // Validate and normalize the questions structure
@@ -168,6 +175,7 @@ const QuizQuestionsUpload: React.FC = () => {
         // Handle Cloudflare API format vs standard format
         const questionType = q.type === 'MULTIPLE_CHOICE' ? 'multiple_choice' : 
                            q.type === 'TRUE_FALSE' ? 'true_false' : 
+                           q.type === 'FILL_IN_THE_BLANK' ? 'fill_in_blank' :
                            q.question_type || 'multiple_choice';
         
         let options = [];
@@ -198,10 +206,10 @@ const QuizQuestionsUpload: React.FC = () => {
         return {
           id: q.id || undefined,
           question_number: q.number || q.question_number || index + 1,
-          question_text: q.quizText || q.question_text || q.question || '',
-          question_image: q.quizImage || q.question_image || q.image || undefined,
-          question_video: q.quizVideo || q.question_video || q.video || undefined,
-          question_audio: q.quizAudio || q.question_audio || q.audio || undefined,
+          question_text: q.questionText || q.quizText || q.question_text || q.question || '',
+          question_image: q.questionImage || q.quizImage || q.question_image || q.image || undefined,
+          question_video: q.questionVideo || q.quizVideo || q.question_video || q.video || undefined,
+          question_audio: q.questionAudio || q.quizAudio || q.question_audio || q.audio || undefined,
           question_type: questionType,
           options: options,
           correct_answer: q.correctAnswer || q.correct_answer || q.answer || undefined,
@@ -213,8 +221,9 @@ const QuizQuestionsUpload: React.FC = () => {
       });
       
       setQuestions(normalizedQuestions);
-      console.log(`Loaded ${normalizedQuestions.length} existing questions`);
+      console.log(`Loaded ${normalizedQuestions.length} existing questions:`, normalizedQuestions);
     } else {
+      console.log('No questions found, initializing empty template');
       // No questions found, start with empty template
       initializeEmptyQuestions();
     }
