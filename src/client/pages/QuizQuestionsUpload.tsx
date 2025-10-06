@@ -175,10 +175,12 @@ const QuizQuestionsUpload: React.FC = () => {
         // Handle Cloudflare API format vs standard format
         const questionType = q.type === 'MULTIPLE_CHOICE' ? 'multiple_choice' : 
                            q.type === 'TRUE_FALSE' ? 'true_false' : 
-                           q.type === 'FILL_IN_THE_BLANK' ? 'fill_in_blank' :
+                           q.type === 'FILL_IN_BLANK' ? 'fill_in_blank' :
                            q.question_type || 'multiple_choice';
         
         let options = [];
+        let correctAnswer = q.correctAnswer || q.correct_answer || q.answer || undefined;
+
         if (q.options && Array.isArray(q.options)) {
           // Cloudflare API format
           options = q.options.map((opt: any, optIndex: number) => ({
@@ -187,6 +189,14 @@ const QuizQuestionsUpload: React.FC = () => {
             option_image: opt.optionImage || opt.option_image || opt.image || undefined,
             is_correct: opt.isCorrectAnswer || opt.is_correct || opt.correct || false
           }));
+
+          // For fill-in-blank questions, extract the answer from options
+          if (questionType === 'fill_in_blank' && options.length > 0) {
+            const correctOption = options.find((opt: any) => opt.is_correct);
+            if (correctOption) {
+              correctAnswer = correctOption.option_text;
+            }
+          }
         } else if (q.type === 'TRUE_FALSE') {
           // True/False question
           options = [
@@ -212,11 +222,11 @@ const QuizQuestionsUpload: React.FC = () => {
           question_audio: q.questionAudio || q.quizAudio || q.question_audio || q.audio || undefined,
           question_type: questionType,
           options: options,
-          correct_answer: q.correctAnswer || q.correct_answer || q.answer || undefined,
-          explanation: q.explanation || undefined,
+          correct_answer: correctAnswer,
+          explanation: q.explanation || q.solutionText || undefined,
           explanation_image: q.explanation_image || undefined,
           explanation_video: q.explanation_video || undefined,
-          marks: q.marks || q.points || 1,
+          marks: q.marks || q.points || q.paperLevel || 1,
         };
       });
       
@@ -371,6 +381,109 @@ const QuizQuestionsUpload: React.FC = () => {
     const link = document.createElement('a');
     link.href = url;
     link.download = `${quiz.name.replace(/\s+/g, '_').toLowerCase()}_questions.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateData = {
+      examSetId: "examset_2024_sample_quiz",
+      examSetName: "Sample Quiz Template",
+      subjectId: "subject_general",
+      year: 2024,
+      questions: [
+        {
+          number: 1,
+          type: "MULTIPLE_CHOICE",
+          questionText: "What is the capital of France?",
+          questionImage: "",
+          solutionText: "Paris is the capital and largest city of France.",
+          part: 1,
+          paperLevel: 1,
+          isFree: true,
+          hasParts: false,
+          options: [
+            {
+              order: 1,
+              name: "A",
+              optionText: "London",
+              isCorrectAnswer: false
+            },
+            {
+              order: 2,
+              name: "B",
+              optionText: "Berlin",
+              isCorrectAnswer: false
+            },
+            {
+              order: 3,
+              name: "C",
+              optionText: "Paris",
+              isCorrectAnswer: true
+            },
+            {
+              order: 4,
+              name: "D",
+              optionText: "Madrid",
+              isCorrectAnswer: false
+            }
+          ]
+        },
+        {
+          number: 2,
+          type: "TRUE_FALSE",
+          questionText: "The Earth is round.",
+          questionImage: "",
+          solutionText: "The Earth is approximately spherical in shape.",
+          part: 1,
+          paperLevel: 1,
+          isFree: true,
+          hasParts: false,
+          options: [
+            {
+              order: 1,
+              name: "True",
+              optionText: "True",
+              isCorrectAnswer: true
+            },
+            {
+              order: 2,
+              name: "False",
+              optionText: "False",
+              isCorrectAnswer: false
+            }
+          ]
+        },
+        {
+          number: 3,
+          type: "FILL_IN_BLANK",
+          questionText: "The largest ocean on Earth is the _____ Ocean.",
+          questionImage: "",
+          solutionText: "The Pacific Ocean is the largest ocean on Earth.",
+          part: 1,
+          paperLevel: 2,
+          isFree: true,
+          hasParts: false,
+          options: [
+            {
+              order: 1,
+              name: "Answer",
+              optionText: "Pacific",
+              isCorrectAnswer: true
+            }
+          ]
+        }
+      ]
+    };
+
+    const dataStr = JSON.stringify(templateData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'quiz_template.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -551,6 +664,9 @@ const QuizQuestionsUpload: React.FC = () => {
               style={{ display: 'none' }}
             />
           </label>
+          <button onClick={handleDownloadTemplate} className="btn btn-info">
+            📋 Download Template
+          </button>
           <button onClick={handleExport} className="btn btn-secondary">
             📤 Export JSON
           </button>

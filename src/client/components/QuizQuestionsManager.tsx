@@ -144,13 +144,25 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
               ))}
             </div>
           )}
+
+          {question.question_type === 'true_false' && (
+            <div className="options-preview">
+              {question.options.map((option, optIndex) => (
+                <div key={optIndex} className={`option-preview ${option.is_correct ? 'correct' : ''}`}>
+                  <span className="option-letter">{option.option_letter}.</span>
+                  <span className="option-text">{option.option_text || <em>Empty option</em>}</span>
+                  {option.is_correct && <span className="correct-indicator">✓</span>}
+                </div>
+              ))}
+            </div>
+          )}
           
-          {(question.question_type === 'short_answer' || question.question_type === 'fill_in_blank') && question.correct_answer && (
+          {(question.question_type === 'short_answer' || question.question_type === 'fill_in_blank') && (
             <div className="correct-answer-preview">
               <span className="answer-label">
                 {question.question_type === 'fill_in_blank' ? 'Answer:' : 'Correct Answer(s):'}
               </span>
-              <span className="answer-text">{question.correct_answer}</span>
+              <span className="answer-text">{question.correct_answer || <em>No answer provided</em>}</span>
             </div>
           )}
         </div>
