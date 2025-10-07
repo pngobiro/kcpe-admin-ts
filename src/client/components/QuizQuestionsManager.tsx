@@ -24,6 +24,20 @@ interface QuizQuestion {
   explanation_image?: string;
   explanation_video?: string;
   marks: number;
+  
+  // Enhanced fields for version control, access, and organization
+  question_id?: string;
+  version?: string;
+  is_free?: boolean;
+  part?: string;
+  main_question?: number;
+  sub_question?: string;
+  has_sub_questions?: boolean;
+  difficulty_level?: string;
+  time_allocation?: number;
+  learning_objective?: string;
+  last_modified?: string;
+  change_log?: string;
 }
 
 interface QuizQuestionsManagerProps {
@@ -36,8 +50,9 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const addQuestion = () => {
+    const newQuestionNumber = questions.length + 1;
     const newQuestion: QuizQuestion = {
-      question_number: questions.length + 1,
+      question_number: newQuestionNumber,
       question_text: '',
       question_type: 'multiple_choice',
       options: [
@@ -47,6 +62,20 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
         { option_letter: 'D', option_text: '', is_correct: false },
       ],
       marks: 1,
+      
+      // Enhanced default fields
+      question_id: `q_${newQuestionNumber}`,
+      version: '1.0',
+      is_free: false, // Default to paid
+      part: undefined,
+      main_question: newQuestionNumber,
+      sub_question: undefined,
+      has_sub_questions: false,
+      difficulty_level: 'INTERMEDIATE',
+      time_allocation: 2,
+      learning_objective: '',
+      last_modified: new Date().toISOString().split('T')[0],
+      change_log: 'Initial creation'
     };
     onChange([...questions, newQuestion]);
   };
@@ -120,6 +149,19 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
         <div className="question-content">
           <div className="question-text">
             {question.question_text || <em>Empty question</em>}
+            {question.part && (
+              <span className="question-part" style={{ 
+                marginLeft: '0.5rem', 
+                padding: '0.2rem 0.5rem', 
+                background: '#e3f2fd',
+                borderRadius: '4px',
+                fontSize: '0.8rem',
+                color: '#1976d2',
+                fontWeight: 'bold'
+              }}>
+                Part {question.part}
+              </span>
+            )}
           </div>
           
           {question.question_image && (
@@ -128,10 +170,108 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
             </div>
           )}
           
-          <div className="question-meta">
-            <span className="question-type">{question.question_type.replace('_', ' ')}</span>
-            <span className="question-marks">{question.marks} marks</span>
+          <div className="question-meta" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+            <span className="question-type" style={{ 
+              background: '#f0f0f0', 
+              padding: '0.2rem 0.5rem', 
+              borderRadius: '4px' 
+            }}>
+              {question.question_type.replace('_', ' ')}
+            </span>
+            <span className="question-marks" style={{ 
+              background: '#e8f5e8', 
+              padding: '0.2rem 0.5rem', 
+              borderRadius: '4px',
+              color: '#2e7d32'
+            }}>
+              {question.marks} marks
+            </span>
+            <span className="access-status" style={{ 
+              background: question.is_free ? '#e8f5e8' : '#fff3e0', 
+              padding: '0.2rem 0.5rem', 
+              borderRadius: '4px',
+              color: question.is_free ? '#2e7d32' : '#ef6c00'
+            }}>
+              {question.is_free ? '🆓 Free' : '💰 Paid'}
+            </span>
+            <span className="difficulty-level" style={{ 
+              background: question.difficulty_level === 'BEGINNER' ? '#e8f5e8' : 
+                         question.difficulty_level === 'ADVANCED' ? '#ffebee' : '#fff3e0', 
+              padding: '0.2rem 0.5rem', 
+              borderRadius: '4px',
+              color: question.difficulty_level === 'BEGINNER' ? '#2e7d32' : 
+                     question.difficulty_level === 'ADVANCED' ? '#c62828' : '#ef6c00'
+            }}>
+              {question.difficulty_level || 'INTERMEDIATE'}
+            </span>
+            <span className="time-allocation" style={{ 
+              background: '#f3e5f5', 
+              padding: '0.2rem 0.5rem', 
+              borderRadius: '4px',
+              color: '#7b1fa2'
+            }}>
+              ⏱️ {question.time_allocation || 2}min
+            </span>
+            {question.version && (
+              <span className="version" style={{ 
+                background: '#e1f5fe', 
+                padding: '0.2rem 0.5rem', 
+                borderRadius: '4px',
+                color: '#0277bd',
+                fontSize: '0.75rem'
+              }}>
+                v{question.version}
+              </span>
+            )}
           </div>
+
+          {question.learning_objective && (
+            <div className="learning-objective" style={{ 
+              fontSize: '0.8rem', 
+              color: '#666', 
+              fontStyle: 'italic',
+              marginBottom: '0.5rem',
+              padding: '0.3rem',
+              background: '#fafafa',
+              borderLeft: '3px solid #2196f3',
+              borderRadius: '0 4px 4px 0'
+            }}>
+              🎯 {question.learning_objective}
+            </div>
+          )}
+
+          {/* Question relationship info */}
+          {(question.has_sub_questions || question.main_question !== question.question_number) && (
+            <div className="question-structure" style={{ 
+              fontSize: '0.75rem', 
+              color: '#888',
+              marginBottom: '0.5rem',
+              display: 'flex',
+              gap: '0.5rem',
+              flexWrap: 'wrap'
+            }}>
+              {question.has_sub_questions && (
+                <span style={{ 
+                  background: '#e8eaf6', 
+                  padding: '0.1rem 0.4rem', 
+                  borderRadius: '3px',
+                  color: '#3f51b5'
+                }}>
+                  📝 Has sub-questions
+                </span>
+              )}
+              {question.main_question !== question.question_number && (
+                <span style={{ 
+                  background: '#f3e5f5', 
+                  padding: '0.1rem 0.4rem', 
+                  borderRadius: '3px',
+                  color: '#7b1fa2'
+                }}>
+                  ↳ Sub-question of Q{question.main_question}
+                </span>
+              )}
+            </div>
+          )}
           
           {question.question_type === 'multiple_choice' && (
             <div className="options-preview">
