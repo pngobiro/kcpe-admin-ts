@@ -6,7 +6,7 @@
   "createdDate": "2025-10-07",
   "lastModified": "2025-10-07T10:30:00Z",
   
-  "accessLevel": "PAID",
+  "isPaid": true,
   "defaultIsFree": false,
   
   "totalQuestions": 8,

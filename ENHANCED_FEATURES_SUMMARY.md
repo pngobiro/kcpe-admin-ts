@@ -78,7 +78,7 @@ interface QuizQuestion {
 {
   "quizId": "enhanced_quiz_template_v2",
   "version": "2.0.0",
-  "accessLevel": "PAID",
+  "isPaid": true,
   "defaultIsFree": false,
   "totalQuestions": 8,
   "estimatedDuration": 18,

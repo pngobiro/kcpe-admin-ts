@@ -310,7 +310,7 @@ const QuizQuestionsUpload: React.FC = () => {
         lastModified: new Date().toISOString(),
         
         // Access control settings
-        accessLevel: "PAID", // Default to paid
+        isPaid: true, // Boolean: true for paid quiz, false for free quiz
         defaultIsFree: false,
         
         // Quiz configuration
@@ -464,7 +464,7 @@ const QuizQuestionsUpload: React.FC = () => {
       lastModified: new Date().toISOString(),
       
       // Access Control Settings
-      accessLevel: "PAID", // Options: "FREE", "PAID", "PREMIUM"
+      isPaid: true, // Boolean: true for paid quiz, false for free quiz
       defaultIsFree: false, // Default access status for questions
       
       // Quiz Configuration

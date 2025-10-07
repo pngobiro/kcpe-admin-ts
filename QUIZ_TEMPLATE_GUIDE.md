@@ -26,7 +26,7 @@ Use the "📋 Download Template" button in the quiz questions interface to get a
   "createdDate": "2025-10-07",
   "lastModified": "2025-10-07T10:30:00Z",
   
-  "accessLevel": "PAID",
+  "isPaid": true,
   "defaultIsFree": false,
   
   "totalQuestions": 7,
@@ -52,7 +52,7 @@ Use the "📋 Download Template" button in the quiz questions interface to get a
 - **version**: Template version (string) - semantic versioning format (e.g., "1.0.0")
 - **createdDate**: Creation date (string) - ISO date format
 - **lastModified**: Last modification timestamp (string) - ISO datetime format
-- **accessLevel**: Quiz access level - "FREE", "PAID", or "PREMIUM"
+- **isPaid**: Quiz access level (boolean) - true for paid quiz, false for free quiz
 - **defaultIsFree**: Default access status for questions (boolean)
 - **totalQuestions**: Total number of questions (integer)
 - **estimatedDuration**: Total estimated time in minutes (integer)
@@ -205,7 +205,8 @@ Use the "📋 Download Template" button in the quiz questions interface to get a
 ### Mixed Access Quiz
 ```json
 {
-  "defaultIsFree": false,  // Most questions are paid
+  "isPaid": true,  // Overall quiz is paid
+  "defaultIsFree": false,  // Most questions are paid by default
   "questions": [
     { "isFree": true, "quizText": "Free preview question..." },
     { "isFree": false, "quizText": "Premium question..." },
