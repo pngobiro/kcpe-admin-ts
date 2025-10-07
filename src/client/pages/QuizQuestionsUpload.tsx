@@ -175,14 +175,14 @@ const QuizQuestionsUpload: React.FC = () => {
         // Handle Cloudflare API format vs standard format
         const questionType = q.type === 'MULTIPLE_CHOICE' ? 'multiple_choice' : 
                            q.type === 'TRUE_FALSE' ? 'true_false' : 
-                           q.type === 'FILL_IN_BLANK' ? 'fill_in_blank' :
+                           q.type === 'FILL_IN_BLANK' || q.type === 'FILL_IN_THE_BLANK' ? 'fill_in_blank' :
                            q.question_type || 'multiple_choice';
         
         let options = [];
         let correctAnswer = q.correctAnswer || q.correct_answer || q.answer || undefined;
 
         if (q.options && Array.isArray(q.options)) {
-          // Cloudflare API format
+          // Cloudflare API format with options array
           options = q.options.map((opt: any, optIndex: number) => ({
             option_letter: opt.name || opt.option_letter || String.fromCharCode(65 + optIndex),
             option_text: opt.optionText || opt.option_text || opt.text || '',
@@ -198,13 +198,24 @@ const QuizQuestionsUpload: React.FC = () => {
             }
           }
         } else if (q.type === 'TRUE_FALSE') {
-          // True/False question
-          options = [
-            { option_letter: 'A', option_text: 'True', is_correct: q.isCorrectAnswer === true },
-            { option_letter: 'B', option_text: 'False', is_correct: q.isCorrectAnswer === false },
-          ];
+          // True/False question - handle both formats
+          if (q.isCorrectAnswer !== undefined) {
+            options = [
+              { option_letter: 'True', option_text: 'True', is_correct: q.isCorrectAnswer === true },
+              { option_letter: 'False', option_text: 'False', is_correct: q.isCorrectAnswer === false },
+            ];
+          } else {
+            options = [
+              { option_letter: 'True', option_text: 'True', is_correct: false },
+              { option_letter: 'False', option_text: 'False', is_correct: false },
+            ];
+          }
+        } else if (questionType === 'fill_in_blank') {
+          // Fill-in-blank question without options array - use correctAnswer directly
+          options = []; // No options needed for display
+          // correctAnswer is already set above
         } else {
-          // Default empty options
+          // Default empty options for multiple choice
           options = [
             { option_letter: 'A', option_text: '', is_correct: false },
             { option_letter: 'B', option_text: '', is_correct: false },
