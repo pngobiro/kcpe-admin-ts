@@ -38,10 +38,21 @@ export const deleteExamSet = (id: string) => api.delete<ApiResponse<void>>(`/exa
 // Past Papers
 export const getPastPapers = (params?: { subject_id?: string; exam_set_id?: string; year?: number }) => 
   api.get<ApiResponse<PastPaper[]>>('/pastpapers', { params });
+export const getPastPaper = (id: string) => api.get<ApiResponse<PastPaper>>(`/pastpapers/${id}`);
 export const createPastPaper = (data: Partial<PastPaper>) => api.post<ApiResponse<PastPaper>>('/pastpapers', data);
 export const updatePastPaper = (id: string, data: Partial<PastPaper>) => 
   api.post<ApiResponse<PastPaper>>('/pastpapers', { ...data, id });
 export const deletePastPaper = (id: string) => api.delete<ApiResponse<void>>(`/pastpapers/${id}`);
+
+// Past Paper Questions API (separate from topic quizzes)
+export const getPastPaperQuestions = (pastPaperId: string) => 
+  api.get<ApiResponse<any>>(`/pastpapers/${pastPaperId}/questions`);
+
+export const savePastPaperQuestions = (pastPaperId: string, questionsData: any) => 
+  api.post<ApiResponse<any>>(`/pastpapers/${pastPaperId}/questions`, questionsData);
+
+export const deletePastPaperQuestions = (pastPaperId: string) => 
+  api.delete<ApiResponse<void>>(`/pastpapers/${pastPaperId}/questions`);
 
 // Questions
 export const getQuestions = (params: { exam_set_id?: string; subject_id?: string }) => 

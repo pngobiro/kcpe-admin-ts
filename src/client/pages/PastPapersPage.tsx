@@ -1,11 +1,12 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getPastPapers, getSubjects, getExamSet, createPastPaper, updatePastPaper, deletePastPaper } from '../api';
 import type { PastPaper, Subject, ExamSet } from '../types';
 import Modal from '../components/Modal';
 
 export default function PastPapersPage() {
   const { subjectId, examSetId } = useParams<{ subjectId?: string; examSetId?: string }>();
+  const navigate = useNavigate();
   const [pastPapers, setPastPapers] = useState<PastPaper[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [examSet, setExamSet] = useState<ExamSet | null>(null);
@@ -128,6 +129,10 @@ export default function PastPapersPage() {
     }
   };
 
+  const handleManageQuestions = (paperId: string) => {
+    navigate(`/pastpapers/${paperId}/questions`);
+  };
+
   const getSubjectName = (subjectId: string) => {
     const subject = subjects.find(s => s.id === subjectId);
     return subject?.name || 'Unknown Subject';
@@ -232,6 +237,12 @@ export default function PastPapersPage() {
                           onClick={() => handleOpenModal(paper)}
                         >
                           Edit
+                        </button>
+                        <button 
+                          className="btn btn-primary action-btn" 
+                          onClick={() => handleManageQuestions(paper.id)}
+                        >
+                          Questions
                         </button>
                         <button 
                           className="btn btn-danger action-btn" 

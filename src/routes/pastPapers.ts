@@ -48,4 +48,34 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// Get past paper questions
+router.get('/:id/questions', async (req: Request, res: Response) => {
+  try {
+    const response = await d1Client.get(`/pastpaper-questions/${req.params.id}`);
+    res.json(response.data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Save past paper questions
+router.post('/:id/questions', async (req: Request, res: Response) => {
+  try {
+    const response = await d1Client.post(`/pastpaper-questions/${req.params.id}`, req.body);
+    res.json(response.data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete past paper questions
+router.delete('/:id/questions', async (req: Request, res: Response) => {
+  try {
+    const response = await d1Client.delete(`/pastpaper-questions/${req.params.id}`);
+    res.json(response.data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
