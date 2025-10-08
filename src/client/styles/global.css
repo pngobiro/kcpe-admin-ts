@@ -301,6 +301,12 @@ tbody tr:hover {
   margin-bottom: 1.5rem;
 }
 
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 .form-label {
   display: block;
   margin-bottom: 0.5rem;

@@ -61,8 +61,6 @@ export interface ExamSet {
   name: string;
   description?: string;
   year?: number;
-  term?: number;
-  level?: string;
   exam_type?: string;
   is_published?: number;
   created_at?: string;

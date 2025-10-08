@@ -23,6 +23,22 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// Get exam sets for a specific course
+router.get('/:courseId/examsets', async (req: Request, res: Response) => {
+  try {
+    const { courseId } = req.params;
+    const { year } = req.query;
+    
+    const params: any = { course_id: courseId };
+    if (year) params.year = year;
+    
+    const response = await d1Client.get('/examsets', { params });
+    res.json(response.data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Create/Update course
 router.post('/', async (req: Request, res: Response) => {
   try {
