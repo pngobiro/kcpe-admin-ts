@@ -22,6 +22,7 @@ function App() {
         <Route path="quizzes/:quizId/questions" element={<QuizQuestionsUpload />} />
         <Route path="topics" element={<Topics />} />
         <Route path="courses/:courseId/examsets" element={<ExamSetsPage />} />
+        <Route path="examsets/:examSetId/pastpapers" element={<PastPapersPage />} />
         <Route path="subjects/:subjectId/pastpapers" element={<PastPapersPage />} />
         <Route path="examsets/:examSetId/questions" element={<QuestionsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

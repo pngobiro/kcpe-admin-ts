@@ -223,10 +223,10 @@ export default function ExamSetsPage() {
                     <td>
                       <div className="actions">
                         <Link 
-                          to={`/examsets/${examSet.id}/questions`} 
+                          to={`/examsets/${examSet.id}/pastpapers`} 
                           className="btn btn-secondary action-btn"
                         >
-                          Questions
+                          Past Papers
                         </Link>
                         <button 
                           className="btn btn-secondary action-btn" 

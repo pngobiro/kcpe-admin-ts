@@ -79,9 +79,9 @@ export interface PastPaper {
   question_paper_url?: string;
   marking_scheme_url?: string;
   solution_video_url?: string;
-  is_free?: number;
+  is_free?: boolean;
   order_index?: number;
-  is_published?: number;
+  is_published?: boolean;
   created_at?: string;
   updated_at?: string;
 }

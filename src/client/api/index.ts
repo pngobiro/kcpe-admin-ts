@@ -27,6 +27,7 @@ export const deleteSubject = (id: string) => api.delete<ApiResponse<void>>(`/sub
 // Exam Sets
 export const getExamSets = (courseId?: string, year?: number) => 
   api.get<ApiResponse<ExamSet[]>>('/examsets', { params: { course_id: courseId, year } });
+export const getExamSet = (id: string) => api.get<ApiResponse<ExamSet>>(`/examsets/${id}`);
 export const getExamSetsForCourse = (courseId: string, year?: number) => 
   api.get<ApiResponse<ExamSet[]>>(`/courses/${courseId}/examsets`, { params: { year } });
 export const createExamSet = (data: Partial<ExamSet>) => api.post<ApiResponse<ExamSet>>('/examsets', data);
