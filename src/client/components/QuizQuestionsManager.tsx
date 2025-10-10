@@ -320,6 +320,37 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
             </div>
           )}
           
+          {question.question_type === 'matching' && (
+            <div className="matching-preview">
+              {question.column_a && question.column_b ? (
+                <div className="matching-columns">
+                  <div className="column">
+                    <h4>Column A</h4>
+                    {question.column_a.map((item, index) => (
+                      <div key={index} className="matching-item">
+                        <span className="item-number">{item.item_number || (index + 1)}.</span>
+                        <span className="item-text">{item.item_text}</span>
+                        {item.item_image && <img src={item.item_image} alt="" style={{ maxWidth: '50px', maxHeight: '50px' }} />}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="column">
+                    <h4>Column B</h4>
+                    {question.column_b.map((item, index) => (
+                      <div key={index} className="matching-item">
+                        <span className="item-letter">{item.item_letter || String.fromCharCode(65 + index)}.</span>
+                        <span className="item-text">{item.item_text}</span>
+                        {item.item_image && <img src={item.item_image} alt="" style={{ maxWidth: '50px', maxHeight: '50px' }} />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="no-data">No matching columns defined</div>
+              )}
+            </div>
+          )}
+          
           {question.question_type === 'ordering' && question.items && (
             <div className="ordering-preview">
               <div className="ordering-items">
