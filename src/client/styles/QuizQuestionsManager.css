@@ -538,3 +538,54 @@
     max-height: 95vh;
   }
 }
+
+/* Matching Question Styles */
+.matching-preview {
+  margin-top: 1rem;
+}
+
+.matching-columns {
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+}
+
+.column {
+  flex: 1;
+}
+
+.column h4 {
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.matching-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+  border: 1px solid #e5e7eb;
+}
+
+.item-number,
+.item-letter {
+  font-weight: 600;
+  color: #4f46e5;
+  min-width: 1.5rem;
+}
+
+.item-text {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.matching-item img {
+  border-radius: 4px;
+}

@@ -7,7 +7,25 @@ interface QuizOption {
   option_letter: string;
   option_text: string;
   option_image?: string;
+  option_video?: string;
+  option_audio?: string;
   is_correct: boolean;
+  feedback?: string;
+}
+
+interface MatchingItem {
+  item_number?: string;
+  item_letter?: string;
+  item_text: string;
+  item_image?: string;
+  correct_match?: string;
+}
+
+interface OrderingItem {
+  item_id: string;
+  item_text: string;
+  item_image?: string;
+  correct_position: number;
 }
 
 interface QuizQuestion {
@@ -17,9 +35,14 @@ interface QuizQuestion {
   question_image?: string;
   question_video?: string;
   question_audio?: string;
-  question_type: 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank';
-  options: QuizOption[];
+  question_type: 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank' | 'short_essay' | 'matching' | 'ordering' | 'multiple_response';
+  options?: QuizOption[];
+  column_a?: MatchingItem[];
+  column_b?: MatchingItem[];
+  items?: OrderingItem[];
   correct_answer?: string;
+  correct_answers?: string[];
+  correct_order?: string;
   explanation?: string;
   explanation_image?: string;
   explanation_video?: string;
@@ -273,7 +296,7 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
             </div>
           )}
           
-          {question.question_type === 'multiple_choice' && (
+          {question.question_type === 'multiple_choice' && question.options && (
             <div className="options-preview">
               {question.options.map((option, optIndex) => (
                 <div key={optIndex} className={`option-preview ${option.is_correct ? 'correct' : ''}`}>
@@ -285,19 +308,46 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
             </div>
           )}
 
-          {question.question_type === 'true_false' && (
+          {question.question_type === 'multiple_response' && question.options && (
             <div className="options-preview">
               {question.options.map((option, optIndex) => (
                 <div key={optIndex} className={`option-preview ${option.is_correct ? 'correct' : ''}`}>
                   <span className="option-letter">{option.option_letter}.</span>
                   <span className="option-text">{option.option_text || <em>Empty option</em>}</span>
-                  {option.is_correct && <span className="correct-indicator">✓</span>}
+                  {option.is_correct ? <><span className="correct-indicator">✓</span><span className="correct-label">Correct</span></> : null}
                 </div>
               ))}
             </div>
           )}
           
-          {(question.question_type === 'short_answer' || question.question_type === 'fill_in_blank') && (
+          {question.question_type === 'matching' && question.column_a && question.column_b && (
+            <div className="matching-preview">
+              <div className="matching-columns">
+                <div className="column">
+                  <h4>Column A</h4>
+                  {question.column_a.map((item, index) => (
+                    <div key={index} className="matching-item">
+                      <span className="item-number">{item.item_number || (index + 1)}.</span>
+                      <span className="item-text">{item.item_text}</span>
+                      {item.item_image && <img src={item.item_image} alt="" style={{ maxWidth: '50px', maxHeight: '50px' }} />}
+                    </div>
+                  ))}
+                </div>
+                <div className="column">
+                  <h4>Column B</h4>
+                  {question.column_b.map((item, index) => (
+                    <div key={index} className="matching-item">
+                      <span className="item-letter">{item.item_letter || String.fromCharCode(65 + index)}.</span>
+                      <span className="item-text">{item.item_text}</span>
+                      {item.item_image && <img src={item.item_image} alt="" style={{ maxWidth: '50px', maxHeight: '50px' }} />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {(question.question_type === 'short_answer' || question.question_type === 'fill_in_blank' || question.question_type === 'short_essay') && (
             <div className="correct-answer-preview">
               <span className="answer-label">
                 {question.question_type === 'fill_in_blank' ? 'Answer:' : 'Correct Answer(s):'}
@@ -326,12 +376,14 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
     };
 
     const updateOption = (optionIndex: number, field: keyof QuizOption, value: any) => {
+      if (!question.options) return;
       const updatedOptions = [...question.options];
       updatedOptions[optionIndex] = { ...updatedOptions[optionIndex], [field]: value };
       updateQuestionField('options', updatedOptions);
     };
 
     const addOption = () => {
+      if (!question.options) return;
       const newLetter = String.fromCharCode(65 + question.options.length); // A, B, C, D, E...
       const newOption: QuizOption = {
         option_letter: newLetter,
@@ -342,15 +394,14 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
     };
 
     const removeOption = (optionIndex: number) => {
-      if (question.options.length > 2) {
-        const updatedOptions = question.options.filter((_, i) => i !== optionIndex);
-        // Re-letter the options
-        const reletteredOptions = updatedOptions.map((option, i) => ({
-          ...option,
-          option_letter: String.fromCharCode(65 + i)
-        }));
-        updateQuestionField('options', reletteredOptions);
-      }
+      if (!question.options || question.options.length <= 2) return;
+      const updatedOptions = question.options.filter((_, i) => i !== optionIndex);
+      // Re-letter the options
+      const reletteredOptions = updatedOptions.map((option, i) => ({
+        ...option,
+        option_letter: String.fromCharCode(65 + i)
+      }));
+      updateQuestionField('options', reletteredOptions);
     };
 
     return createPortal(
@@ -378,11 +429,11 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                 <select
                   value={question.question_type}
                   onChange={(e) => {
-                    const newType = e.target.value as 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank';
+                    const newType = e.target.value as QuizQuestion['question_type'];
                     updateQuestionField('question_type', newType);
                     
                     // Update options based on question type
-                    let newOptions: QuizOption[] = [];
+                    let newOptions: QuizOption[] | undefined = undefined;
                     if (newType === 'multiple_choice') {
                       newOptions = [
                         { option_letter: 'A', option_text: '', is_correct: false },
@@ -395,8 +446,13 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                         { option_letter: 'A', option_text: 'True', is_correct: false },
                         { option_letter: 'B', option_text: 'False', is_correct: false },
                       ];
-                    } else if (newType === 'short_answer' || newType === 'fill_in_blank') {
-                      newOptions = []; // No options for short answer or fill in blank
+                    } else if (newType === 'multiple_response') {
+                      newOptions = [
+                        { option_letter: 'A', option_text: '', is_correct: false },
+                        { option_letter: 'B', option_text: '', is_correct: false },
+                        { option_letter: 'C', option_text: '', is_correct: false },
+                        { option_letter: 'D', option_text: '', is_correct: false },
+                      ];
                     }
                     updateQuestionField('options', newOptions);
                   }}
@@ -405,6 +461,10 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                   <option value="true_false">True/False</option>
                   <option value="short_answer">Short Answer</option>
                   <option value="fill_in_blank">Fill in the Blank</option>
+                  <option value="short_essay">Short Essay</option>
+                  <option value="matching">Matching</option>
+                  <option value="ordering">Ordering</option>
+                  <option value="multiple_response">Multiple Response</option>
                 </select>
               </div>
               
@@ -453,7 +513,7 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
               </div>
             </div>
             
-            {(question.question_type === 'multiple_choice' || question.question_type === 'true_false') && (
+            {(question.question_type === 'multiple_choice' || question.question_type === 'true_false' || question.question_type === 'multiple_response') && question.options && (
               <div className="options-section">
                 <div className="section-header">
                   <h3>Answer Options</h3>
@@ -478,7 +538,7 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                             />
                             Correct Answer
                           </label>
-                          {question.question_type === 'multiple_choice' && question.options.length > 2 && (
+                          {question.question_type === 'multiple_choice' && question.options && question.options.length > 2 && (
                             <button
                               onClick={() => removeOption(optIndex)}
                               className="btn-icon delete small"
