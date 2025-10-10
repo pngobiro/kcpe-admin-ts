@@ -320,29 +320,18 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
             </div>
           )}
           
-          {question.question_type === 'matching' && question.column_a && question.column_b && (
-            <div className="matching-preview">
-              <div className="matching-columns">
-                <div className="column">
-                  <h4>Column A</h4>
-                  {question.column_a.map((item, index) => (
-                    <div key={index} className="matching-item">
-                      <span className="item-number">{item.item_number || (index + 1)}.</span>
+          {question.question_type === 'ordering' && question.items && (
+            <div className="ordering-preview">
+              <div className="ordering-items">
+                {question.items
+                  .sort((a, b) => a.correct_position - b.correct_position)
+                  .map((item, index) => (
+                    <div key={item.item_id} className="ordering-item">
+                      <span className="item-position">{index + 1}.</span>
                       <span className="item-text">{item.item_text}</span>
                       {item.item_image && <img src={item.item_image} alt="" style={{ maxWidth: '50px', maxHeight: '50px' }} />}
                     </div>
                   ))}
-                </div>
-                <div className="column">
-                  <h4>Column B</h4>
-                  {question.column_b.map((item, index) => (
-                    <div key={index} className="matching-item">
-                      <span className="item-letter">{item.item_letter || String.fromCharCode(65 + index)}.</span>
-                      <span className="item-text">{item.item_text}</span>
-                      {item.item_image && <img src={item.item_image} alt="" style={{ maxWidth: '50px', maxHeight: '50px' }} />}
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           )}
