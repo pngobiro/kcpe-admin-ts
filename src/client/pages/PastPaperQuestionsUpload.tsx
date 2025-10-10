@@ -303,6 +303,31 @@ const PastPaperQuestionsUpload: React.FC = () => {
     URL.revokeObjectURL(url);
   };
   
+  const handleDownloadActualData = async () => {
+    if (!pastPaperId) return;
+    
+    try {
+      const response = await getPastPaperQuestions(pastPaperId);
+      if (response.data.success && response.data.data) {
+        const dataStr = JSON.stringify(response.data.data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${pastPaper?.name || pastPaperId}_questions.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        alert('No saved data found for this past paper.');
+      }
+    } catch (err: any) {
+      alert(`Failed to download data: ${err.message}`);
+      console.error('Download error:', err);
+    }
+  };
+  
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -349,6 +374,9 @@ const PastPaperQuestionsUpload: React.FC = () => {
             📥 Import JSON
             <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
           </label>
+          <button onClick={handleDownloadActualData} className="btn btn-success">
+            📥 Download Saved Data
+          </button>
           <button onClick={handleDownloadTemplate} className="btn btn-info">
             📋 Download Template
           </button>

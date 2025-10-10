@@ -29,7 +29,7 @@ interface OrderingItem {
 }
 
 interface QuizQuestion {
-  id?: string;
+  id: string;
   question_number: number;
   question_text: string;
   question_image?: string;
@@ -44,23 +44,13 @@ interface QuizQuestion {
   correct_answers?: string[];
   correct_order?: string;
   explanation?: string;
-  explanation_image?: string;
-  explanation_video?: string;
   marks: number;
-  
-  // Enhanced fields for version control, access, and organization
-  question_id?: string;
-  version?: string;
   is_free?: boolean;
-  part?: string;
-  main_question?: number;
-  sub_question?: string;
-  has_sub_questions?: boolean;
   difficulty_level?: string;
   time_allocation?: number;
   learning_objective?: string;
-  last_modified?: string;
-  change_log?: string;
+  // Metadata for reconstructing sections
+  section_id?: string;
 }
 
 interface QuizQuestionsManagerProps {
@@ -75,6 +65,7 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
   const addQuestion = () => {
     const newQuestionNumber = questions.length + 1;
     const newQuestion: QuizQuestion = {
+      id: `q_${Date.now()}`,
       question_number: newQuestionNumber,
       question_text: '',
       question_type: 'multiple_choice',
@@ -85,20 +76,10 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
         { option_letter: 'D', option_text: '', is_correct: false },
       ],
       marks: 1,
-      
-      // Enhanced default fields
-      question_id: `q_${newQuestionNumber}`,
-      version: '1.0',
-      is_free: false, // Default to paid
-      part: undefined,
-      main_question: newQuestionNumber,
-      sub_question: undefined,
-      has_sub_questions: false,
+      is_free: false,
       difficulty_level: 'INTERMEDIATE',
       time_allocation: 2,
       learning_objective: '',
-      last_modified: new Date().toISOString().split('T')[0],
-      change_log: 'Initial creation'
     };
     onChange([...questions, newQuestion]);
   };
@@ -117,8 +98,8 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
     const questionToDuplicate = questions[index];
     const duplicatedQuestion = {
       ...questionToDuplicate,
+      id: `q_${Date.now()}`,
       question_number: questions.length + 1,
-      id: undefined // Remove ID so it gets a new one when saved
     };
     onChange([...questions, duplicatedQuestion]);
   };
@@ -172,19 +153,6 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
         <div className="question-content">
           <div className="question-text">
             {question.question_text || <em>Empty question</em>}
-            {question.part && (
-              <span className="question-part" style={{ 
-                marginLeft: '0.5rem', 
-                padding: '0.2rem 0.5rem', 
-                background: '#e3f2fd',
-                borderRadius: '4px',
-                fontSize: '0.8rem',
-                color: '#1976d2',
-                fontWeight: 'bold'
-              }}>
-                Part {question.part}
-              </span>
-            )}
           </div>
           
           {question.question_image && (
@@ -247,17 +215,6 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
             }}>
               ⏱️ {question.time_allocation || 2}min
             </span>
-            {question.version && (
-              <span className="version" style={{ 
-                background: '#e1f5fe', 
-                padding: '0.2rem 0.5rem', 
-                borderRadius: '4px',
-                color: '#0277bd',
-                fontSize: '0.75rem'
-              }}>
-                v{question.version}
-              </span>
-            )}
           </div>
 
           {question.learning_objective && (
@@ -272,39 +229,6 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
               borderRadius: '0 4px 4px 0'
             }}>
               🎯 {question.learning_objective}
-            </div>
-          )}
-
-          {/* Question relationship info */}
-          {(question.has_sub_questions || question.main_question !== question.question_number) && (
-            <div className="question-structure" style={{ 
-              fontSize: '0.75rem', 
-              color: '#888',
-              marginBottom: '0.5rem',
-              display: 'flex',
-              gap: '0.5rem',
-              flexWrap: 'wrap'
-            }}>
-              {question.has_sub_questions && (
-                <span style={{ 
-                  background: '#e8eaf6', 
-                  padding: '0.1rem 0.4rem', 
-                  borderRadius: '3px',
-                  color: '#3f51b5'
-                }}>
-                  📝 Has sub-questions
-                </span>
-              )}
-              {question.main_question !== question.question_number && (
-                <span style={{ 
-                  background: '#f3e5f5', 
-                  padding: '0.1rem 0.4rem', 
-                  borderRadius: '3px',
-                  color: '#7b1fa2'
-                }}>
-                  ↳ Sub-question of Q{question.main_question}
-                </span>
-              )}
             </div>
           )}
           
@@ -913,38 +837,14 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
             
             <div className="explanation-section">
               <h3>Explanation (Optional)</h3>
-              <div className="form-grid">
-                <div className="form-group full-width">
-                  <label>Explanation Text</label>
-                  <textarea
-                    value={question.explanation || ''}
-                    onChange={(e) => updateQuestionField('explanation', e.target.value)}
-                    rows={2}
-                    placeholder="Explain the correct answer..."
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <MediaUpload
-                    value={question.explanation_image || ''}
-                    onChange={(url) => updateQuestionField('explanation_image', url)}
-                    placeholder="https://example.com/explanation.jpg"
-                    acceptTypes="image/*,.jpg,.jpeg,.png,.gif,.webp"
-                    label="Explanation Image"
-                    mediaType="image"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <MediaUpload
-                    value={question.explanation_video || ''}
-                    onChange={(url) => updateQuestionField('explanation_video', url)}
-                    placeholder="https://example.com/explanation.mp4"
-                    acceptTypes="video/*,.mp4,.avi,.mov,.wmv,.flv,.webm"
-                    label="Explanation Video"
-                    mediaType="video"
-                  />
-                </div>
+              <div className="form-group full-width">
+                <label>Explanation Text</label>
+                <textarea
+                  value={question.explanation || ''}
+                  onChange={(e) => updateQuestionField('explanation', e.target.value)}
+                  rows={2}
+                  placeholder="Explain the correct answer..."
+                />
               </div>
             </div>
           </div>
