@@ -476,6 +476,10 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                     
                     // Update options based on question type
                     let newOptions: QuizOption[] | undefined = undefined;
+                    let newColumnA: MatchingItem[] | undefined = undefined;
+                    let newColumnB: MatchingItem[] | undefined = undefined;
+                    let newItems: OrderingItem[] | undefined = undefined;
+                    
                     if (newType === 'multiple_choice') {
                       newOptions = [
                         { option_letter: 'A', option_text: '', is_correct: false },
@@ -495,8 +499,29 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                         { option_letter: 'C', option_text: '', is_correct: false },
                         { option_letter: 'D', option_text: '', is_correct: false },
                       ];
+                    } else if (newType === 'matching') {
+                      newColumnA = [
+                        { item_number: '1', item_text: '', correct_match: 'A' },
+                        { item_number: '2', item_text: '', correct_match: 'B' },
+                        { item_number: '3', item_text: '', correct_match: 'C' }
+                      ];
+                      newColumnB = [
+                        { item_letter: 'A', item_text: '' },
+                        { item_letter: 'B', item_text: '' },
+                        { item_letter: 'C', item_text: '' }
+                      ];
+                    } else if (newType === 'ordering') {
+                      newItems = [
+                        { item_id: 'item_1', item_text: '', correct_position: 1 },
+                        { item_id: 'item_2', item_text: '', correct_position: 2 },
+                        { item_id: 'item_3', item_text: '', correct_position: 3 }
+                      ];
                     }
+                    
                     updateQuestionField('options', newOptions);
+                    updateQuestionField('column_a', newColumnA);
+                    updateQuestionField('column_b', newColumnB);
+                    updateQuestionField('items', newItems);
                   }}
                 >
                   <option value="multiple_choice">Multiple Choice</option>
@@ -644,6 +669,244 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                       ? 'Tip: Use underscores (___) or brackets (__________) in your question text to indicate where students should fill in the answer.'
                       : 'For multiple acceptable answers, separate them with commas (e.g., "answer1, answer2").'}
                   </small>
+                </div>
+              </div>
+            )}
+
+            {question.question_type === 'matching' && (
+              <div className="matching-section">
+                <div className="section-header">
+                  <h3>Matching Columns</h3>
+                  <button onClick={() => {
+                    const newColumnA = question.column_a || [];
+                    const newColumnB = question.column_b || [];
+                    const newItemNumber = (newColumnA.length + 1).toString();
+                    const newItemLetter = String.fromCharCode(64 + newColumnB.length + 1);
+                    
+                    updateQuestionField('column_a', [...newColumnA, {
+                      item_number: newItemNumber,
+                      item_text: '',
+                      correct_match: newItemLetter
+                    }]);
+                    updateQuestionField('column_b', [...newColumnB, {
+                      item_letter: newItemLetter,
+                      item_text: ''
+                    }]);
+                  }} className="btn btn-secondary btn-sm">
+                    + Add Matching Pair
+                  </button>
+                </div>
+                
+                <div className="matching-columns-editor">
+                  <div className="column-editor">
+                    <h4>Column A (Questions/Items)</h4>
+                    {(question.column_a || []).map((item, index) => (
+                      <div key={index} className="matching-item-editor">
+                        <div className="item-header">
+                          <span className="item-label">Item {item.item_number || (index + 1)}</span>
+                          <button
+                            onClick={() => {
+                              const newColumnA = (question.column_a || []).filter((_, i) => i !== index);
+                              const newColumnB = (question.column_b || []).filter((_, i) => i !== index);
+                              updateQuestionField('column_a', newColumnA);
+                              updateQuestionField('column_b', newColumnB);
+                            }}
+                            className="btn-icon delete small"
+                            title="Remove Pair"
+                          >
+                            ×
+                          </button>
+                        </div>
+                        <div className="item-inputs">
+                          <input
+                            type="text"
+                            value={item.item_text}
+                            onChange={(e) => {
+                              const newColumnA = [...(question.column_a || [])];
+                              newColumnA[index] = { ...newColumnA[index], item_text: e.target.value };
+                              updateQuestionField('column_a', newColumnA);
+                            }}
+                            placeholder="Enter item text..."
+                          />
+                          <MediaUpload
+                            value={item.item_image || ''}
+                            onChange={(url) => {
+                              const newColumnA = [...(question.column_a || [])];
+                              newColumnA[index] = { ...newColumnA[index], item_image: url };
+                              updateQuestionField('column_a', newColumnA);
+                            }}
+                            placeholder="Item image URL (optional)"
+                            acceptTypes="image/*,.jpg,.jpeg,.png,.gif,.webp"
+                            label="Item Image"
+                            mediaType="image"
+                          />
+                          <div className="match-selector">
+                            <label>Matches with:</label>
+                            <select
+                              value={item.correct_match || ''}
+                              onChange={(e) => {
+                                const newColumnA = [...(question.column_a || [])];
+                                newColumnA[index] = { ...newColumnA[index], correct_match: e.target.value };
+                                updateQuestionField('column_a', newColumnA);
+                              }}
+                            >
+                              <option value="">Select match...</option>
+                              {(question.column_b || []).map((bItem, bIndex) => (
+                                <option key={bIndex} value={bItem.item_letter || String.fromCharCode(65 + bIndex)}>
+                                  {bItem.item_letter || String.fromCharCode(65 + bIndex)}. {bItem.item_text || 'Empty'}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="column-editor">
+                    <h4>Column B (Answers/Matches)</h4>
+                    {(question.column_b || []).map((item, index) => (
+                      <div key={index} className="matching-item-editor">
+                        <div className="item-header">
+                          <span className="item-label">{item.item_letter || String.fromCharCode(65 + index)}. Answer</span>
+                        </div>
+                        <div className="item-inputs">
+                          <input
+                            type="text"
+                            value={item.item_text}
+                            onChange={(e) => {
+                              const newColumnB = [...(question.column_b || [])];
+                              newColumnB[index] = { ...newColumnB[index], item_text: e.target.value };
+                              updateQuestionField('column_b', newColumnB);
+                            }}
+                            placeholder="Enter answer text..."
+                          />
+                          <MediaUpload
+                            value={item.item_image || ''}
+                            onChange={(url) => {
+                              const newColumnB = [...(question.column_b || [])];
+                              newColumnB[index] = { ...newColumnB[index], item_image: url };
+                              updateQuestionField('column_b', newColumnB);
+                            }}
+                            placeholder="Answer image URL (optional)"
+                            acceptTypes="image/*,.jpg,.jpeg,.png,.gif,.webp"
+                            label="Answer Image"
+                            mediaType="image"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {question.question_type === 'ordering' && (
+              <div className="ordering-section">
+                <div className="section-header">
+                  <h3>Ordering Items</h3>
+                  <button onClick={() => {
+                    const newItems = question.items || [];
+                    const newItem: OrderingItem = {
+                      item_id: `item_${Date.now()}`,
+                      item_text: '',
+                      correct_position: newItems.length + 1
+                    };
+                    updateQuestionField('items', [...newItems, newItem]);
+                  }} className="btn btn-secondary btn-sm">
+                    + Add Item
+                  </button>
+                </div>
+                
+                <div className="ordering-items-editor">
+                  {(question.items || [])
+                    .sort((a, b) => a.correct_position - b.correct_position)
+                    .map((item) => (
+                      <div key={item.item_id} className="ordering-item-editor">
+                        <div className="item-header">
+                          <span className="item-position">Position {item.correct_position}</span>
+                          <div className="item-controls">
+                            <button
+                              onClick={() => {
+                                const newItems = (question.items || []).map(i => 
+                                  i.item_id === item.item_id 
+                                    ? { ...i, correct_position: Math.max(1, i.correct_position - 1) }
+                                    : i.correct_position > item.correct_position 
+                                      ? { ...i, correct_position: i.correct_position - 1 }
+                                      : i
+                                );
+                                updateQuestionField('items', newItems);
+                              }}
+                              className="btn-icon"
+                              title="Move Up"
+                              disabled={item.correct_position === 1}
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={() => {
+                                const maxPosition = (question.items || []).length;
+                                const newItems = (question.items || []).map(i => 
+                                  i.item_id === item.item_id 
+                                    ? { ...i, correct_position: Math.min(maxPosition, i.correct_position + 1) }
+                                    : i.correct_position < item.correct_position 
+                                      ? { ...i, correct_position: i.correct_position + 1 }
+                                      : i
+                                );
+                                updateQuestionField('items', newItems);
+                              }}
+                              className="btn-icon"
+                              title="Move Down"
+                              disabled={item.correct_position === (question.items || []).length}
+                            >
+                              ↓
+                            </button>
+                            <button
+                              onClick={() => {
+                                const newItems = (question.items || [])
+                                  .filter(i => i.item_id !== item.item_id)
+                                  .map((i, idx) => ({ ...i, correct_position: idx + 1 }));
+                                updateQuestionField('items', newItems);
+                              }}
+                              className="btn-icon delete small"
+                              title="Remove Item"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                        <div className="item-inputs">
+                          <input
+                            type="text"
+                            value={item.item_text}
+                            onChange={(e) => {
+                              const newItems = (question.items || []).map(i => 
+                                i.item_id === item.item_id 
+                                  ? { ...i, item_text: e.target.value }
+                                  : i
+                              );
+                              updateQuestionField('items', newItems);
+                            }}
+                            placeholder="Enter item text..."
+                          />
+                          <MediaUpload
+                            value={item.item_image || ''}
+                            onChange={(url) => {
+                              const newItems = (question.items || []).map(i => 
+                                i.item_id === item.item_id 
+                                  ? { ...i, item_image: url }
+                                  : i
+                              );
+                              updateQuestionField('items', newItems);
+                            }}
+                            placeholder="Item image URL (optional)"
+                            acceptTypes="image/*,.jpg,.jpeg,.png,.gif,.webp"
+                            label="Item Image"
+                            mediaType="image"
+                          />
+                        </div>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
