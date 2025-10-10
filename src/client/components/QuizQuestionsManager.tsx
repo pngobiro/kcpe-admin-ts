@@ -314,6 +314,11 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                 <div key={optIndex} className={`option-preview ${option.is_correct ? 'correct' : ''}`}>
                   <span className="option-letter">{option.option_letter}.</span>
                   <span className="option-text">{option.option_text || <em>Empty option</em>}</span>
+                  {option.option_image && (
+                    <div className="option-image">
+                      <img src={option.option_image} alt={`Option ${option.option_letter}`} style={{ maxWidth: '50px', maxHeight: '50px' }} />
+                    </div>
+                  )}
                   {option.is_correct ? <><span className="correct-indicator">✓</span><span className="correct-label">Correct Answer</span></> : null}
                 </div>
               ))}
@@ -326,6 +331,11 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
                 <div key={optIndex} className={`option-preview ${option.is_correct ? 'correct' : ''}`}>
                   <span className="option-letter">{option.option_letter}.</span>
                   <span className="option-text">{option.option_text || <em>Empty option</em>}</span>
+                  {option.option_image && (
+                    <div className="option-image">
+                      <img src={option.option_image} alt={`Option ${option.option_letter}`} style={{ maxWidth: '50px', maxHeight: '50px' }} />
+                    </div>
+                  )}
                   {option.is_correct ? <><span className="correct-indicator">✓</span><span className="correct-label">Correct</span></> : null}
                 </div>
               ))}
