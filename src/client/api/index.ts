@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { Course, Subject, ExamSet, PastPaper, Question, ApiResponse, Topic, TopicFormData } from '../types';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: process.env.NODE_ENV === 'development' ? 'http://localhost:3000/api' : '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -107,7 +107,7 @@ export const deleteQuiz = (id: string) =>
 export const uploadQuizData = (quizId: string, data: any) => 
   api.post<ApiResponse<any>>(`/quizzes/${quizId}/upload-data`, data);
 
-// Media Upload
+// Media Upload - direct to worker to avoid proxy issues
 export const uploadMedia = (file: File, description?: string) => {
   const formData = new FormData();
   formData.append('file', file);
@@ -115,11 +115,12 @@ export const uploadMedia = (file: File, description?: string) => {
     formData.append('description', description);
   }
   
-  return api.post<ApiResponse<{ url: string; id: string }>>('/media/upload', formData, {
+  return axios.create({
+    baseURL: 'https://east-africa-education-api.pngobiro.workers.dev/api',
     headers: {
-      'Content-Type': 'multipart/form-data',
+      'X-API-Key': 'ea_edu_api_2025_9bf6e21f5d1a4d7da1b74ca222b89eec_secure',
     },
-  });
+  }).post<ApiResponse<{ url: string; id: string }>>('/media/upload', formData);
 };
 
 export default api;

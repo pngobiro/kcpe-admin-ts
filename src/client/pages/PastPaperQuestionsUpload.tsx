@@ -2,51 +2,110 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import QuizQuestionsManager from '../components/QuizQuestionsManager';
 import { getPastPaper, getPastPaperQuestions, savePastPaperQuestions } from '../api';
-import type { PastPaper } from '../types';
 import '../styles/global.css';
 
-interface PastPaperOption {
+// --- COMPREHENSIVE TYPESCRIPT INTERFACES FOR THE NEW STRUCTURE ---
+
+type QuestionType = 
+  | 'multiple_choice'
+  | 'true_false'
+  | 'short_answer'
+  | 'fill_in_blank'
+  | 'short_essay'
+  | 'matching'
+  | 'ordering'
+  | 'multiple_response';
+
+interface Multimedia {
+  image?: string;
+  video?: string;
+  audio?: string;
+}
+
+interface QuizOption {
   option_letter: string;
   option_text: string;
   option_image?: string;
+  option_video?: string;
+  option_audio?: string;
   is_correct: boolean;
+  feedback?: string;
 }
 
-interface PastPaperQuestion {
-  id?: string;
+interface MatchingItem {
+  item_number?: string;
+  item_letter?: string;
+  item_text: string;
+  item_image?: string;
+  correct_match?: string;
+}
+
+interface OrderingItem {
+  item_id: string;
+  item_text: string;
+  item_image?: string;
+  correct_position: number;
+}
+
+interface QuizQuestion {
+  id: string;
   question_number: number;
   question_text: string;
+  question_type: QuestionType;
   question_image?: string;
   question_video?: string;
   question_audio?: string;
-  question_type: 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank';
-  options: PastPaperOption[];
+  options?: QuizOption[];
+  column_a?: MatchingItem[];
+  column_b?: MatchingItem[];
+  items?: OrderingItem[];
   correct_answer?: string;
+  correct_answers?: string[];
+  correct_order?: string;
   explanation?: string;
-  explanation_image?: string;
-  explanation_video?: string;
   marks: number;
-  
-  // Enhanced fields for past papers
-  question_id?: string;
-  version?: string;
   is_free?: boolean;
-  part?: string;
-  main_question?: number;
-  sub_question?: string;
-  has_sub_questions?: boolean;
   difficulty_level?: string;
   time_allocation?: number;
   learning_objective?: string;
-  last_modified?: string;
-  change_log?: string;
+  // Metadata for reconstructing sections
+  section_id?: string; 
 }
+
+interface QuizSection {
+  section_id: string;
+  section_name: string;
+  section_description?: string;
+  section_image?: string;
+  section_video?: string;
+  section_audio?: string;
+  questions: QuizQuestion[];
+}
+
+interface PastPaper {
+  id: string;
+  name: string;
+  year: number;
+  type: string;
+  questions_data_url?: string;
+  is_published: boolean;
+  subject_id?: string;
+  exam_set_id?: string;
+  paper_number?: number;
+  paper_level?: string;
+  paper_type?: string;
+  is_free?: boolean;
+}
+
+// --- REACT COMPONENT ---
 
 const PastPaperQuestionsUpload: React.FC = () => {
   const { pastPaperId } = useParams<{ pastPaperId: string }>();
   const navigate = useNavigate();
   const [pastPaper, setPastPaper] = useState<PastPaper | null>(null);
-  const [questions, setQuestions] = useState<PastPaperQuestion[]>([]);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  // State to hold section metadata without questions
+  const [sections, setSections] = useState<Omit<QuizSection, 'questions'>[]>([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -58,364 +117,178 @@ const PastPaperQuestionsUpload: React.FC = () => {
   }, [pastPaperId]);
 
   const fetchPastPaperData = async () => {
+    if (!pastPaperId) return;
     try {
       setLoading(true);
-      
-      // Fetch the past paper details
-      console.log('Fetching past paper data for ID:', pastPaperId);
-      const pastPaperResponse = await getPastPaper(pastPaperId!);
-      
+      setError(null);
+      const pastPaperResponse = await getPastPaper(pastPaperId);
       if (pastPaperResponse.data.success && pastPaperResponse.data.data) {
-        const pastPaperData = pastPaperResponse.data.data;
+        const pastPaperData = pastPaperResponse.data.data as PastPaper;
         setPastPaper(pastPaperData);
         
-        // If the past paper has questions data, fetch existing questions
         if (pastPaperData.questions_data_url) {
-          console.log('Loading existing questions from:', pastPaperData.questions_data_url);
-          try {
-            const questionsResponse = await getPastPaperQuestions(pastPaperId!);
-            
-            if (questionsResponse.data.success && questionsResponse.data.data) {
-              processQuestionData(questionsResponse.data.data);
-            } else {
-              console.log('No existing questions found');
-              initializeEmptyQuestions();
-            }
-          } catch (fetchError) {
-            console.error('Error fetching questions:', fetchError);
-            setError('Failed to load existing questions. You can still add new questions.');
-            initializeEmptyQuestions();
+          const questionsResponse = await getPastPaperQuestions(pastPaperId);
+          if (questionsResponse.data.success && questionsResponse.data.data) {
+            processQuestionData(questionsResponse.data.data);
+          } else {
+            initializeEmptyState();
           }
         } else {
-          // No questions data URL, start with empty template
-          initializeEmptyQuestions();
+          initializeEmptyState();
         }
       } else {
-        throw new Error('Failed to load past paper data');
+        throw new Error(pastPaperResponse.data.error || 'Failed to load past paper details');
       }
-    } catch (err) {
-      setError('Failed to load past paper data');
-      console.error('Error fetching past paper:', err);
-      initializeEmptyQuestions();
+    } catch (err: any) {
+      setError(err.message || 'An unknown error occurred while fetching data.');
     } finally {
       setLoading(false);
     }
   };
 
-  const initializeEmptyQuestions = () => {
+  const initializeEmptyState = () => {
+    const sectionId = 'default_section';
+    setSections([{ section_id: sectionId, section_name: 'Main Section' }]);
     setQuestions([
       {
+        id: `q_${Date.now()}`,
         question_number: 1,
-        question_text: 'Enter your question here...',
-        question_type: 'multiple_choice' as const,
-        options: [
-          { option_letter: 'A', option_text: '', is_correct: false },
-          { option_letter: 'B', option_text: '', is_correct: false },
-          { option_letter: 'C', option_text: '', is_correct: false },
-          { option_letter: 'D', option_text: '', is_correct: false },
-        ],
+        question_text: 'Enter your first question here...',
+        question_type: 'multiple_choice',
+        options: [{ option_letter: 'A', option_text: 'Option A', is_correct: true }],
+        correct_answer: 'A',
         marks: 1,
-        
-        // Enhanced default fields for past papers
-        question_id: 'pp_q_1',
-        version: '1.0',
-        is_free: false, // Past papers are typically paid content
-        part: undefined,
-        main_question: 1,
-        sub_question: undefined,
-        has_sub_questions: false,
-        difficulty_level: 'INTERMEDIATE',
-        time_allocation: 2,
-        learning_objective: '',
-        last_modified: new Date().toISOString().split('T')[0],
-        change_log: 'Initial creation'
+        section_id: sectionId,
       },
     ]);
   };
 
-  const processQuestionData = (questionsData: any) => {
-    console.log('Processing past paper question data:', questionsData);
-    
-    // Handle different possible JSON structures
-    let questionsArray = [];
-    if (Array.isArray(questionsData)) {
-      questionsArray = questionsData;
-    } else if (questionsData.questions && Array.isArray(questionsData.questions)) {
-      questionsArray = questionsData.questions;
-    } else if (questionsData.data && questionsData.data.questions && Array.isArray(questionsData.data.questions)) {
-      questionsArray = questionsData.data.questions;
-    } else if (questionsData.data && Array.isArray(questionsData.data)) {
-      questionsArray = questionsData.data;
-    }
-    
-    console.log('Found questions array:', questionsArray.length, 'questions');
-    
-    if (questionsArray.length > 0) {
-      // Normalize the questions structure for past papers
-      const normalizedQuestions = questionsArray.map((q: any, index: number) => {
-        const questionType = q.type === 'MULTIPLE_CHOICE' ? 'multiple_choice' : 
-                           q.type === 'TRUE_FALSE' ? 'true_false' : 
-                           q.type === 'FILL_IN_BLANK' || q.type === 'FILL_IN_THE_BLANK' ? 'fill_in_blank' :
-                           q.question_type || 'multiple_choice';
+  const processQuestionData = (data: any) => {
+    if (data.sections && Array.isArray(data.sections)) {
+      const allQuestions: QuizQuestion[] = [];
+      const sectionInfo: Omit<QuizSection, 'questions'>[] = [];
+
+      data.sections.forEach((section: any) => {
+        sectionInfo.push({
+          section_id: section.section_id,
+          section_name: section.section_name,
+          section_description: section.section_description,
+          section_image: section.section_image,
+          section_video: section.section_video,
+          section_audio: section.section_audio,
+        });
         
-        let options = [];
-        let correctAnswer = q.correctAnswer || q.correct_answer || q.answer || undefined;
-
-        if (q.options && Array.isArray(q.options)) {
-          options = q.options.map((opt: any, optIndex: number) => ({
-            option_letter: opt.name || opt.option_letter || String.fromCharCode(65 + optIndex),
-            option_text: opt.optionText || opt.option_text || opt.text || '',
-            option_image: opt.optionImage || opt.option_image || opt.image || undefined,
-            is_correct: opt.isCorrectAnswer || opt.is_correct || opt.correct || false
-          }));
-
-          if (questionType === 'fill_in_blank' && options.length > 0) {
-            const correctOption = options.find((opt: any) => opt.is_correct);
-            if (correctOption) {
-              correctAnswer = correctOption.option_text;
-            }
-          }
-        } else if (q.type === 'TRUE_FALSE') {
-          if (q.isCorrectAnswer !== undefined) {
-            options = [
-              { option_letter: 'True', option_text: 'True', is_correct: q.isCorrectAnswer === true },
-              { option_letter: 'False', option_text: 'False', is_correct: q.isCorrectAnswer === false },
-            ];
-          } else {
-            options = [
-              { option_letter: 'True', option_text: 'True', is_correct: false },
-              { option_letter: 'False', option_text: 'False', is_correct: false },
-            ];
-          }
-        } else if (questionType === 'fill_in_blank') {
-          options = [];
-        } else {
-          options = [
-            { option_letter: 'A', option_text: '', is_correct: false },
-            { option_letter: 'B', option_text: '', is_correct: false },
-            { option_letter: 'C', option_text: '', is_correct: false },
-            { option_letter: 'D', option_text: '', is_correct: false },
-          ];
+        if (section.questions && Array.isArray(section.questions)) {
+          section.questions.forEach((q: any) => {
+            allQuestions.push({
+              ...q,
+              id: q.id || `q_${Date.now()}_${allQuestions.length}`,
+              section_id: section.section_id, // Tag question with its section
+            });
+          });
         }
-
-        return {
-          id: q.id || q.questionId || undefined,
-          question_number: q.number || q.question_number || index + 1,
-          question_text: q.questionText || q.quizText || q.question_text || q.question || '',
-          question_image: q.questionImage || q.quizImage || q.question_image || q.image || undefined,
-          question_video: q.questionVideo || q.quizVideo || q.question_video || q.video || undefined,
-          question_audio: q.questionAudio || q.quizAudio || q.question_audio || q.audio || undefined,
-          question_type: questionType,
-          options: options,
-          correct_answer: correctAnswer,
-          explanation: q.explanation || q.solutionText || undefined,
-          explanation_image: q.explanation_image || undefined,
-          explanation_video: q.explanation_video || undefined,
-          marks: q.marks || q.points || q.paperLevel || 1,
-          
-          // Enhanced fields for past papers
-          question_id: q.questionId || `pp_q_${index + 1}`,
-          version: q.questionVersion || q.version || "1.0",
-          is_free: q.isFree !== undefined ? q.isFree : (q.is_free !== undefined ? q.is_free : false),
-          part: q.part || q.questionPart || undefined,
-          main_question: q.mainQuestion || q.main_question || (q.number || index + 1),
-          sub_question: q.subQuestion || q.sub_question || undefined,
-          has_sub_questions: q.hasSubQuestions || q.has_sub_questions || false,
-          difficulty_level: q.difficultyLevel || q.difficulty_level || q.difficulty || 'INTERMEDIATE',
-          time_allocation: q.timeAllocation || q.time_allocation || q.estimatedTime || 2,
-          learning_objective: q.learningObjective || q.learning_objective || q.objective || undefined,
-          last_modified: q.lastModified || q.last_modified || new Date().toISOString().split('T')[0],
-          change_log: q.changeLog || q.change_log || undefined
-        };
       });
       
-      setQuestions(normalizedQuestions);
-      console.log(`Loaded ${normalizedQuestions.length} existing past paper questions:`, normalizedQuestions);
+      setSections(sectionInfo);
+      setQuestions(allQuestions);
     } else {
-      console.log('No questions found, initializing empty template');
-      initializeEmptyQuestions();
+      // Fallback for older format
+      initializeEmptyState();
     }
   };
 
   const handleSave = async () => {
     if (!pastPaper) return;
     
+    setSaving(true);
     try {
-      setSaving(true);
-      
-      // Prepare the data for past paper questions storage
-      const questionsData = {
-        // Past paper metadata
-        title: `${pastPaper.subject_id || 'Subject'} - Paper ${pastPaper.paper_number} Level ${pastPaper.paper_level}`,
-        description: `Past paper questions for ${pastPaper.paper_type || 'main'} examination`,
+      const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+      const estimatedTime = Math.round(questions.reduce((sum, q) => sum + (q.time_allocation || 60), 0) / 60);
+
+      const fullPaperData = {
+        title: pastPaper.name || `Paper ${pastPaper.paper_number}`,
+        description: `Questions for ${pastPaper.name}`,
         paper_info: {
-          past_paper_id: pastPaper.id,
           paper_number: pastPaper.paper_number,
           paper_level: pastPaper.paper_level,
           paper_type: pastPaper.paper_type,
-          subject_id: pastPaper.subject_id,
-          exam_set_id: pastPaper.exam_set_id,
-          year: pastPaper.year,
-          duration_minutes: 120, // Default duration
-          total_marks: questions.reduce((sum, q) => sum + (q.marks || 1), 0)
+          total_questions: questions.length,
+          total_marks: totalMarks,
+          estimated_time_minutes: estimatedTime,
         },
-        instructions: [
-          "Answer ALL questions in this paper",
-          "Write your answers in the spaces provided",
-          "Candidates should check the question paper to ascertain that all pages are printed as indicated",
-          "All working MUST be clearly shown where necessary"
-        ],
-        
-        // Questions data
-        questions: questions.map((q, index) => ({
-          id: q.question_number || index + 1,
-          question: q.question_text,
-          question_type: q.question_type,
-          marks: q.marks || 1,
-          options: q.options.map(opt => opt.option_text),
-          correct_answer: q.question_type === 'multiple_choice' 
-            ? q.options.findIndex(opt => opt.is_correct)
-            : q.correct_answer,
-          explanation: q.explanation || '',
-          learning_objective: q.learning_objective || '',
-          difficulty: q.difficulty_level || 'medium'
-        })),
-        
-        // Metadata
-        sections: [
-          {
-            section_name: "Section A: Multiple Choice Questions",
-            section_description: "Choose the best answer for each question",
-            question_ids: questions.map((_, index) => index + 1),
-            marks: questions.reduce((sum, q) => sum + (q.marks || 1), 0)
-          }
-        ],
-        total_questions: questions.length,
-        total_marks: questions.reduce((sum, q) => sum + (q.marks || 1), 0),
-        estimated_duration: questions.reduce((sum, q) => sum + (q.time_allocation || 2), 0),
-        
-        // Access control
-        is_free: pastPaper.is_free || false,
-        is_published: pastPaper.is_published || false,
-        
-        // Timestamps
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        instructions: ["Answer ALL questions.", "Read each question carefully."],
+        sections: sections.map(sectionInfo => ({
+          ...sectionInfo,
+          // Filter questions belonging to this section and strip the temporary section_id
+          questions: questions
+            .filter(q => q.section_id === sectionInfo.section_id)
+            .map(({ section_id, ...restOfQuestion }) => restOfQuestion)
+        }))
       };
 
-      console.log('Saving past paper questions data to R2:', questionsData);
-      
-      const response = await savePastPaperQuestions(pastPaper.id, questionsData);
-      
+      const response = await savePastPaperQuestions(pastPaper.id, fullPaperData);
       if (response.data.success) {
-        const freeCount = questions.filter(q => q.is_free === true).length;
-        const paidCount = questions.filter(q => q.is_free === false).length;
-        
-        alert(`Successfully saved ${questions.length} questions to R2 storage for Past Paper!\n\nBreakdown:\n• Free questions: ${freeCount}\n• Paid questions: ${paidCount}\n• Total marks: ${questionsData.total_marks}\n• Estimated duration: ${questionsData.estimated_duration} minutes\n\nQuestions Data URL: ${response.data.data.questions_data_url}`);
+        alert(`Successfully saved ${questions.length} questions across ${sections.length} sections.`);
       } else {
-        throw new Error(response.data.error || 'Save failed');
+        throw new Error(response.data.error || 'Save failed due to a server error.');
       }
-      
     } catch (err: any) {
-      console.error('Error saving past paper questions:', err);
-      alert(`Failed to save questions: ${err.message || err}`);
+      setError(`Failed to save questions: ${err.message}`);
+      alert(`Failed to save questions: ${err.message}`);
     } finally {
       setSaving(false);
     }
   };
-
-  const handleExport = () => {
-    if (!pastPaper) return;
-    
-    const exportData = {
-      past_paper_id: pastPaper.id,
-      past_paper_name: `Paper ${pastPaper.paper_number} Level ${pastPaper.paper_level}`,
-      subject_id: pastPaper.subject_id,
-      exam_set_id: pastPaper.exam_set_id,
-      paper_info: {
-        paper_number: pastPaper.paper_number,
-        paper_level: pastPaper.paper_level,
-        paper_type: pastPaper.paper_type,
-        year: pastPaper.year
-      },
-      questions: questions,
-      exported_at: new Date().toISOString()
-    };
-    
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `past_paper_${pastPaper.id}_questions.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
+  
   const handleDownloadTemplate = () => {
+    // Uses the exact, comprehensive template provided by the user
     const templateData = {
-      title: "Biology Grade 10 - Term 1 Past Paper",
-      description: "Past paper questions for Biology Grade 10 Term 1 examination",
-      paper_info: {
-        paper_number: 1,
-        paper_level: 1,
-        paper_type: "main",
-        duration_minutes: 120,
-        total_marks: 100
-      },
-      instructions: [
-        "Answer ALL questions in this paper",
-        "Write your answers in the spaces provided",
-        "Candidates should check the question paper to ascertain that all pages are printed as indicated",
-        "All working MUST be clearly shown where necessary"
-      ],
-      questions: [
-        {
-          id: 1,
-          question: "Which of the following is NOT a characteristic of living organisms?",
-          question_type: "multiple_choice",
-          marks: 1,
-          options: [
-            "Growth and development",
-            "Response to stimuli", 
-            "Reproduction",
-            "Uniform composition"
-          ],
-          correct_answer: 3,
-          explanation: "Living organisms do not have uniform composition; they are made up of various different molecules and structures.",
-          learning_objective: "Identify characteristics of living organisms",
-          difficulty: "easy"
-        },
-        {
-          id: 2,
-          question: "The basic unit of life is:",
-          question_type: "multiple_choice",
-          marks: 1,
-          options: [
-            "Atom",
-            "Molecule",
-            "Cell",
-            "Tissue"
-          ],
-          correct_answer: 2,
-          explanation: "The cell is considered the basic unit of life as it is the smallest structural and functional unit of living organisms.",
-          learning_objective: "Understand cell theory",
-          difficulty: "easy"
-        }
-      ],
-      sections: [
-        {
-          section_name: "Section A: Multiple Choice Questions",
-          section_description: "Choose the best answer for each question",
-          question_ids: [1, 2],
-          marks: 2
-        }
-      ],
-      total_questions: 2,
-      total_marks: 2,
-      estimated_duration: 4
+      "title": "Comprehensive Quiz & Exam Template (with Full Multimedia Support)",
+      "description": "The definitive universal template showcasing all supported question types and multimedia fields at every level (section, question, and option/item).",
+      "paper_info": { "paper_number": 1, "paper_level": "General", "paper_type": "template", "subject_id": "mixed_subjects", "total_questions": 8, "total_marks": 50, "estimated_time_minutes": 15 },
+      "instructions": [ "Answer ALL questions in this paper.", "Read each question carefully before answering.", "Some questions may include images, audio, or video for context." ],
+      "sections": [
+        { "section_id": "mcq", "section_name": "Section A: Multiple Choice Questions", "section_description": "Choose the single best answer for each question.", "section_image": "https://example.com/images/section_a_header.png", "questions": [
+          { "id": "q001", "question_number": 1, "question_text": "Which of the following flags belongs to Japan?", "question_type": "multiple_choice", "options": [
+            { "option_letter": "A", "option_text": "Flag A", "option_image": "https://example.com/images/flag_canada.png", "is_correct": false, "feedback": "This is the flag of Canada." },
+            { "option_letter": "B", "option_text": "Flag B", "option_image": "https://example.com/images/flag_japan.png", "is_correct": true, "feedback": "Correct! This is the 'Hinomaru'." },
+            { "option_letter": "C", "option_text": "Flag C", "option_image": "https://example.com/images/flag_brazil.png", "is_correct": false, "feedback": "This is the flag of Brazil." }
+          ], "correct_answer": "B", "explanation": "The Japanese flag, known as the Hinomaru (Circle of the Sun), features a large red disc on a white background.", "marks": 5, "is_free": true, "difficulty_level": "beginner", "time_allocation": 60 }
+        ]},
+        { "section_id": "tf", "section_name": "Section B: True/False", "questions": [
+          { "id": "q002", "question_number": 2, "question_text": "Listen to the audio clip. Is this the sound of a lion roaring?", "question_type": "true_false", "question_audio": "https://example.com/audio/tiger_growl.mp3", "options": [
+            { "option_letter": "True", "option_text": "True", "is_correct": false }, { "option_letter": "False", "option_text": "False", "is_correct": true }
+          ], "correct_answer": "False", "explanation": "The audio clip was the sound of a tiger, not a lion.", "marks": 5, "is_free": true, "time_allocation": 45 }
+        ]},
+        { "section_id": "sa", "section_name": "Section C: Short Answer", "questions": [
+          { "id": "q003", "question_number": 3, "question_text": "What is the name of the landmark shown in the image?", "question_type": "short_answer", "question_image": "https://example.com/images/eiffel_tower.jpg", "correct_answer": "Eiffel Tower", "marks": 5, "is_free": true }
+        ]},
+        { "section_id": "fib", "section_name": "Section D: Fill in the Blank", "questions": [
+          { "id": "q004", "question_number": 4, "question_text": "The largest planet in our solar system is ____.", "question_type": "fill_in_blank", "correct_answer": "Jupiter", "marks": 5 }
+        ]},
+        { "section_id": "essay", "section_name": "Section E: Short Essay", "questions": [
+          { "id": "q005", "question_number": 5, "question_text": "Watch the video about the water cycle. Briefly explain evaporation.", "question_type": "short_essay", "question_video": "https://example.com/videos/water_cycle.mp4", "correct_answer": "Model Answer: Evaporation is the process where liquid water heats up, turns into a gas (water vapor), and rises into the atmosphere.", "marks": 10, "is_free": false, "difficulty_level": "intermediate", "time_allocation": 300 }
+        ]},
+        { "section_id": "match", "section_name": "Section F: Matching", "questions": [
+          { "id": "q006", "question_number": 6, "question_text": "Match the artist to their painting.", "question_type": "matching", "column_a": [
+            { "item_number": "1", "item_text": "Artist A", "item_image": "https://example.com/images/artist_da_vinci.jpg", "correct_match": "B" }, { "item_number": "2", "item_text": "Artist B", "item_image": "https://example.com/images/artist_van_gogh.jpg", "correct_match": "A" }
+          ], "column_b": [
+            { "item_letter": "A", "item_text": "The Starry Night", "item_image": "https://example.com/images/painting_starry_night.jpg" }, { "item_letter": "B", "item_text": "Mona Lisa", "item_image": "https://example.com/images/painting_mona_lisa.jpg" }
+          ], "marks": 5, "difficulty_level": "intermediate" }
+        ]},
+        { "section_id": "order", "section_name": "Section G: Ordering", "questions": [
+          { "id": "q007", "question_number": 7, "question_text": "Arrange the butterfly life cycle images in order.", "question_type": "ordering", "items": [
+            { "item_id": "pupa", "item_text": "Pupa", "item_image": "https://example.com/images/lifecycle_pupa.png", "correct_position": 3 }, { "item_id": "adult", "item_text": "Butterfly", "item_image": "https://example.com/images/lifecycle_butterfly.png", "correct_position": 4 },
+            { "item_id": "egg", "item_text": "Eggs", "item_image": "https://example.com/images/lifecycle_eggs.png", "correct_position": 1 }, { "item_id": "larva", "item_text": "Caterpillar", "item_image": "https://example.com/images/lifecycle_caterpillar.png", "correct_position": 2 }
+          ], "correct_order": "egg, larva, pupa, adult", "marks": 5 }
+        ]},
+        { "section_id": "mr", "section_name": "Section H: Multiple Response", "questions": [
+          { "id": "q008", "question_number": 8, "question_text": "Select ALL images that show a percussion instrument.", "question_type": "multiple_response", "options": [
+            { "option_letter": "A", "option_text": "Drums", "option_image": "https://example.com/images/instrument_drums.jpg", "is_correct": true }, { "option_letter": "B", "option_text": "Flute", "option_image": "https://example.com/images/instrument_flute.jpg", "is_correct": false },
+            { "option_letter": "C", "option_text": "Xylophone", "option_image": "https://example.com/images/instrument_xylophone.jpg", "is_correct": true }, { "option_letter": "D", "option_text": "Violin", "option_image": "https://example.com/images/instrument_violin.jpg", "is_correct": false }
+          ], "correct_answers": ["A", "C"], "marks": 5 }
+        ]}
+      ]
     };
 
     const dataStr = JSON.stringify(templateData, null, 2);
@@ -423,13 +296,13 @@ const PastPaperQuestionsUpload: React.FC = () => {
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'past_paper_questions_template.json';
+    link.download = 'full_quiz_template_with_multimedia.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
+  
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -438,113 +311,25 @@ const PastPaperQuestionsUpload: React.FC = () => {
     reader.onload = async (e) => {
       try {
         const jsonData = JSON.parse(e.target?.result as string);
-        
-        // Validate the imported data structure
-        if (jsonData.questions && Array.isArray(jsonData.questions)) {
-          // Process the imported questions
-          processQuestionData(jsonData);
-          
-          // Automatically save to R2 after successful import
-          if (pastPaper) {
-            try {
-              setSaving(true);
-              const response = await savePastPaperQuestions(pastPaper.id, jsonData);
-              
-              if (response.data.success) {
-                alert(`Successfully imported and saved ${jsonData.questions.length} questions to R2 storage!\nQuestions Data URL: ${response.data.data.questions_data_url}`);
-              } else {
-                alert(`Questions imported locally but failed to save to R2: ${response.data.error}`);
-              }
-            } catch (uploadError: any) {
-              console.error('Upload error:', uploadError);
-              alert(`Questions imported locally but failed to save to R2: ${uploadError.message}`);
-            } finally {
-              setSaving(false);
-            }
-          } else {
-            alert(`Successfully imported ${jsonData.questions.length} questions!`);
-          }
-        } else {
-          alert('Invalid file format. Please ensure the JSON contains a "questions" array.');
-        }
+        processQuestionData(jsonData);
+        alert(`Successfully imported questions. Click 'Save Questions' to commit the changes.`);
       } catch (err) {
-        console.error('Error parsing JSON:', err);
-        alert('Failed to parse JSON file. Please check the file format.');
+        alert('Failed to parse JSON file. Please check the file format and try again.');
+        console.error("JSON Parsing Error:", err);
       }
     };
     reader.readAsText(file);
-    
-    // Reset the file input
     event.target.value = '';
   };
+  
+  const goBack = () => navigate(-1);
 
-  const goBack = () => {
-    navigate(-1);
-  };
-
+  // --- JSX Rendering ---
   if (loading) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '2rem' }}>
-        <div style={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          fontSize: '1.5rem',
-          fontWeight: 'bold',
-          marginBottom: '1rem'
-        }}>
-          Loading past paper data...
-        </div>
-        <div style={{ 
-          color: '#6b7280', 
-          fontSize: '1rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem',
-          alignItems: 'center'
-        }}>
-          <div>📋 Fetching past paper details</div>
-          <div>🔍 Checking for existing questions</div>
-          <div>⚡ Preparing editor</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container" style={{ textAlign: 'center', padding: '2rem' }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          marginBottom: '1.5rem',
-          border: '1px solid #f87171',
-          color: '#dc2626'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>⚠️</span>
-            <strong>Error Loading Past Paper Data</strong>
-          </div>
-          <p style={{ margin: 0, lineHeight: '1.5' }}>{error}</p>
-          <div style={{ 
-            marginTop: '1rem', 
-            padding: '1rem', 
-            background: 'rgba(255,255,255,0.7)', 
-            borderRadius: '8px',
-            fontSize: '0.9rem'
-          }}>
-            <strong>💡 What you can do:</strong>
-            <ul style={{ margin: '0.5rem 0 0 1rem', paddingLeft: '1rem' }}>
-              <li>Use the upload functionality below to add questions manually</li>
-              <li>Import questions from a JSON file using the "Import JSON" button</li>
-              <li>Download the template to see the expected format</li>
-            </ul>
-          </div>
-        </div>
-        <button onClick={goBack} className="btn btn-secondary">
-          ← Go Back
-        </button>
+        <div className="loading-spinner"></div>
+        <p>Loading Past Paper Data...</p>
       </div>
     );
   }
@@ -553,214 +338,38 @@ const PastPaperQuestionsUpload: React.FC = () => {
     <div className="container">
       <div className="page-header">
         <div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '1rem', 
-            marginBottom: '0.5rem' 
-          }}>
-            <button 
-              onClick={goBack}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '1.5rem',
-                cursor: 'pointer',
-                color: '#667eea',
-                padding: '0.25rem',
-                borderRadius: '4px',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              ←
-            </button>
-            <h1 style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              margin: 0
-            }}>
-              Past Paper Questions Upload
-            </h1>
-          </div>
-          <p className="subtitle">
-            Upload and manage questions for: <strong>Paper {pastPaper?.paper_number} Level {pastPaper?.paper_level}</strong>
-          </p>
+          <button onClick={goBack} className="btn-back">←</button>
+          <h1 style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '1rem' }}>
+            Manage Past Paper Questions
+          </h1>
+          <p className="subtitle">For: <strong>{pastPaper?.name || pastPaperId}</strong></p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+        <div className="action-buttons">
+          <label className="btn btn-secondary">
             📥 Import JSON
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              style={{ display: 'none' }}
-            />
+            <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
           </label>
           <button onClick={handleDownloadTemplate} className="btn btn-info">
             📋 Download Template
           </button>
-          <button onClick={handleExport} className="btn btn-secondary">
-            📤 Export JSON
-          </button>
-          <button 
-            onClick={handleSave} 
-            className="btn btn-primary"
-            disabled={saving}
-            style={{
-              background: saving 
-                ? '#ccc' 
-                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              cursor: saving ? 'not-allowed' : 'pointer'
-            }}
-          >
+          <button onClick={handleSave} className="btn btn-primary" disabled={saving}>
             {saving ? '💾 Saving...' : '💾 Save Questions'}
           </button>
         </div>
       </div>
+      
+      {error && <div className="error-banner">⚠️ {error}</div>}
 
-      <div style={{
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        padding: '1rem',
-        borderRadius: '8px',
-        marginBottom: '1.5rem',
-        border: '1px solid #e1e8ed'
-      }}>
-        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-          <div>
-            <strong style={{ color: '#667eea' }}>Past Paper ID:</strong> {pastPaper?.id}
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Subject:</strong> {pastPaper?.subject_id}
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Exam Set:</strong> {pastPaper?.exam_set_id}
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Paper:</strong> {pastPaper?.paper_number} - Level {pastPaper?.paper_level}
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Type:</strong> {pastPaper?.paper_type}
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Year:</strong> {pastPaper?.year || 'N/A'}
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Questions:</strong> {questions.length}
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Free Questions:</strong> 
-            <span style={{ color: '#27ae60', marginLeft: '0.5rem' }}>
-              {questions.filter(q => q.is_free === true).length}
-            </span>
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Paid Questions:</strong> 
-            <span style={{ color: '#e67e22', marginLeft: '0.5rem' }}>
-              {questions.filter(q => q.is_free === false).length}
-            </span>
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Total Marks:</strong> 
-            {questions.reduce((sum, q) => sum + (q.marks || 1), 0)}
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Est. Duration:</strong> 
-            {questions.reduce((sum, q) => sum + (q.time_allocation || 2), 0)} min
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Status:</strong> 
-            <span style={{ 
-              color: pastPaper?.is_published ? '#27ae60' : '#e67e22',
-              marginLeft: '0.5rem'
-            }}>
-              {pastPaper?.is_published ? 'Published' : 'Draft'}
-            </span>
-          </div>
-          <div>
-            <strong style={{ color: '#667eea' }}>Access:</strong> 
-            <span style={{ 
-              color: pastPaper?.is_free ? '#27ae60' : '#e67e22',
-              marginLeft: '0.5rem'
-            }}>
-              {pastPaper?.is_free ? 'Free' : 'Paid'}
-            </span>
-          </div>
-          {pastPaper?.questions_data_url && (
-            <div>
-              <strong style={{ color: '#667eea' }}>Data Source:</strong> 
-              <a 
-                href={pastPaper.questions_data_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ 
-                  color: '#3b82f6', 
-                  marginLeft: '0.5rem',
-                  textDecoration: 'none'
-                }}
-              >
-                📄 View JSON
-              </a>
-            </div>
-          )}
-        </div>
-        
-        {/* Question Parts Summary */}
-        {questions.some(q => q.part || q.has_sub_questions) && (
-          <div style={{ 
-            marginTop: '1rem', 
-            paddingTop: '1rem', 
-            borderTop: '1px solid #e1e8ed' 
-          }}>
-            <strong style={{ color: '#667eea', marginBottom: '0.5rem', display: 'block' }}>
-              Question Parts Structure:
-            </strong>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem' }}>
-              <div>
-                <strong>Main Questions:</strong> {questions.filter(q => !q.part).length}
-              </div>
-              <div>
-                <strong>Sub-parts:</strong> {questions.filter(q => q.part).length}
-              </div>
-              <div>
-                <strong>Questions with Parts:</strong> {questions.filter(q => q.has_sub_questions).length}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Difficulty Distribution */}
-        <div style={{ 
-          marginTop: '1rem', 
-          paddingTop: '1rem', 
-          borderTop: '1px solid #e1e8ed' 
-        }}>
-          <strong style={{ color: '#667eea', marginBottom: '0.5rem', display: 'block' }}>
-            Difficulty Distribution:
-          </strong>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem' }}>
-            <div>
-              <span style={{ color: '#27ae60' }}>●</span> 
-              <strong>Beginner:</strong> {questions.filter(q => q.difficulty_level === 'BEGINNER').length}
-            </div>
-            <div>
-              <span style={{ color: '#f39c12' }}>●</span> 
-              <strong>Intermediate:</strong> {questions.filter(q => q.difficulty_level === 'INTERMEDIATE').length}
-            </div>
-            <div>
-              <span style={{ color: '#e74c3c' }}>●</span> 
-              <strong>Advanced:</strong> {questions.filter(q => q.difficulty_level === 'ADVANCED').length}
-            </div>
-          </div>
-        </div>
+      <div className="summary-panel">
+        <div><strong>Paper ID:</strong> {pastPaper?.id}</div>
+        <div><strong>Subject:</strong> {pastPaper?.subject_id || 'N/A'}</div>
+        <div><strong>Sections:</strong> {sections.length}</div>
+        <div><strong>Total Questions:</strong> {questions.length}</div>
+        <div><strong>Total Marks:</strong> {questions.reduce((sum, q) => sum + q.marks, 0)}</div>
+        <div><strong>Est. Time:</strong> {Math.round(questions.reduce((sum, q) => sum + (q.time_allocation || 60), 0) / 60)} min</div>
       </div>
 
-      <QuizQuestionsManager 
-        questions={questions} 
-        onChange={setQuestions} 
-      />
+      <QuizQuestionsManager questions={questions} onChange={setQuestions} />
     </div>
   );
 };

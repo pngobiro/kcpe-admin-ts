@@ -7,7 +7,7 @@ import coursesRouter from '../routes/courses';
 import subjectsRouter from '../routes/subjects';
 import topicsRouter from '../routes/topics';
 import examSetsRouter from '../routes/examSets';
-import pastPapersRouter from './routes/pastpapers';
+import pastPapersRouter from '../routes/pastPapers';
 import questionsRouter from '../routes/questions';
 import lessonsRouter from '../routes/lessons';
 import quizzesRouter from '../routes/quizzes';

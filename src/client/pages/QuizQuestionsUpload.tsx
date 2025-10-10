@@ -789,21 +789,33 @@ const QuizQuestionsUpload: React.FC = () => {
     reader.onload = async (e) => {
       try {
         const jsonData = JSON.parse(e.target?.result as string);
-        
-        // Validate the imported data structure
-        if (jsonData.questions && Array.isArray(jsonData.questions)) {
+
+        // Validate the imported data structure - support new nested format only
+        let isValidFormat = false;
+        let questionsArray = [];
+
+        // Only support new nested format (questions inside sections)
+        if (jsonData.sections && Array.isArray(jsonData.sections)) {
+          // Extract questions from all sections
+          questionsArray = jsonData.sections.flatMap((section: any) =>
+            section.questions ? section.questions : []
+          );
+          isValidFormat = questionsArray.length > 0;
+        }
+
+        if (isValidFormat) {
           // Process the imported questions
-          processQuestionData(jsonData);
-          
+          processQuestionData({ questions: questionsArray });
+
           // Automatically save to R2 after successful import
           if (quiz) {
             try {
               setSaving(true);
               const { uploadQuizData } = await import('../api');
-              const response = await uploadQuizData(quiz.id, jsonData);
-              
+              const response = await uploadQuizData(quiz.id, { questions: questionsArray });
+
               if (response.data.success) {
-                alert(`Successfully imported and saved ${jsonData.questions.length} questions to R2 storage!\nR2 Key: ${response.data.data.r2Key}`);
+                alert(`Successfully imported and saved ${questionsArray.length} questions to R2 storage!\nR2 Key: ${response.data.data.r2Key}`);
               } else {
                 alert(`Questions imported locally but failed to save to R2: ${response.data.error}`);
               }
@@ -814,10 +826,10 @@ const QuizQuestionsUpload: React.FC = () => {
               setSaving(false);
             }
           } else {
-            alert(`Successfully imported ${jsonData.questions.length} questions!`);
+            alert(`Successfully imported ${questionsArray.length} questions!`);
           }
         } else {
-          alert('Invalid file format. Please ensure the JSON contains a "questions" array.');
+          alert('Invalid file format. Please use the correct JSON format with:\n• A "sections" array where each section contains a "questions" array\n• See questions_types.json for the complete template structure');
         }
       } catch (err) {
         console.error('Error parsing JSON:', err);
@@ -825,7 +837,7 @@ const QuizQuestionsUpload: React.FC = () => {
       }
     };
     reader.readAsText(file);
-    
+
     // Reset the file input
     event.target.value = '';
   };

@@ -64,6 +64,7 @@ router.post('/:id/questions', async (req: Request, res: Response) => {
     const response = await d1Client.post(`/pastpaper-questions/${req.params.id}`, req.body);
     res.json(response.data);
   } catch (error: any) {
+    console.error('Error saving past paper questions:', error);
     res.status(500).json({ error: error.message });
   }
 });

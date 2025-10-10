@@ -86,9 +86,10 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
         throw new Error('Upload failed - no URL returned');
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      alert('Failed to upload file. Please try again.');
+      console.error('Response:', error.response?.data);
+      alert(`Failed to upload file: ${error.response?.data?.error || error.message}`);
       setIsUploading(false);
       setUploadProgress(0);
     }

@@ -171,8 +171,23 @@
 }
 
 .option-preview.correct {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  background: linear-gradient(90deg, #bbf7d0 0%, #dcfce7 100%);
+  border-left: 6px solid #16a34a;
   border-color: #16a34a;
+  box-shadow: 0 2px 8px 0 #bbf7d055;
+  position: relative;
+}
+
+.option-preview.correct .correct-label {
+  display: inline-block;
+  margin-left: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  background: #16a34a;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .option-letter {

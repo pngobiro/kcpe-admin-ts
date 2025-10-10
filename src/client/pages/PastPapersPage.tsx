@@ -218,7 +218,6 @@ export default function PastPapersPage() {
                         {paper.questions_data_url && <div>✅ Questions</div>}
                         {paper.question_paper_url && <div>📄 Paper PDF</div>}
                         {paper.marking_scheme_url && <div>📝 Marking</div>}
-                        {paper.solution_video_url && <div>🎥 Video</div>}
                       </div>
                     </td>
                     <td>
@@ -378,17 +377,6 @@ export default function PastPapersPage() {
               value={formData.marking_scheme_url || ''}
               onChange={(e) => setFormData({ ...formData, marking_scheme_url: e.target.value })}
               placeholder="https://example.com/marking-scheme.pdf"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Solution Video URL</label>
-            <input
-              type="url"
-              className="form-input"
-              value={formData.solution_video_url || ''}
-              onChange={(e) => setFormData({ ...formData, solution_video_url: e.target.value })}
-              placeholder="https://example.com/solution-video.mp4"
             />
           </div>
 

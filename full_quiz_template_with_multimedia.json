@@ -1,0 +1,264 @@
+{
+  "title": "Comprehensive Quiz & Exam Template (with Full Multimedia Support)",
+  "description": "The definitive universal template showcasing all supported question types and multimedia fields at every level (section, question, and option/item).",
+  "paper_info": {
+    "paper_number": 1,
+    "paper_level": "General",
+    "paper_type": "template",
+    "subject_id": "mixed_subjects",
+    "total_questions": 8,
+    "total_marks": 50,
+    "estimated_time_minutes": 15
+  },
+  "instructions": [
+    "Answer ALL questions in this paper.",
+    "Read each question carefully before answering.",
+    "Some questions may include images, audio, or video for context."
+  ],
+  "sections": [
+    {
+      "section_id": "mcq",
+      "section_name": "Section A: Multiple Choice Questions",
+      "section_description": "Choose the single best answer for each question.",
+      "section_image": "https://example.com/images/section_a_header.png",
+      "questions": [
+        {
+          "id": "q001",
+          "question_number": 1,
+          "question_text": "Which of the following flags belongs to Japan?",
+          "question_type": "multiple_choice",
+          "options": [
+            {
+              "option_letter": "A",
+              "option_text": "Flag A",
+              "option_image": "https://example.com/images/flag_canada.png",
+              "is_correct": false,
+              "feedback": "This is the flag of Canada."
+            },
+            {
+              "option_letter": "B",
+              "option_text": "Flag B",
+              "option_image": "https://example.com/images/flag_japan.png",
+              "is_correct": true,
+              "feedback": "Correct! This is the 'Hinomaru'."
+            },
+            {
+              "option_letter": "C",
+              "option_text": "Flag C",
+              "option_image": "https://example.com/images/flag_brazil.png",
+              "is_correct": false,
+              "feedback": "This is the flag of Brazil."
+            }
+          ],
+          "correct_answer": "B",
+          "explanation": "The Japanese flag, known as the Hinomaru (Circle of the Sun), features a large red disc on a white background.",
+          "marks": 5,
+          "is_free": true,
+          "difficulty_level": "beginner",
+          "time_allocation": 60
+        }
+      ]
+    },
+    {
+      "section_id": "tf",
+      "section_name": "Section B: True/False",
+      "questions": [
+        {
+          "id": "q002",
+          "question_number": 2,
+          "question_text": "Listen to the audio clip. Is this the sound of a lion roaring?",
+          "question_type": "true_false",
+          "question_audio": "https://example.com/audio/tiger_growl.mp3",
+          "options": [
+            {
+              "option_letter": "True",
+              "option_text": "True",
+              "is_correct": false
+            },
+            {
+              "option_letter": "False",
+              "option_text": "False",
+              "is_correct": true
+            }
+          ],
+          "correct_answer": "False",
+          "explanation": "The audio clip was the sound of a tiger, not a lion.",
+          "marks": 5,
+          "is_free": true,
+          "time_allocation": 45
+        }
+      ]
+    },
+    {
+      "section_id": "sa",
+      "section_name": "Section C: Short Answer",
+      "questions": [
+        {
+          "id": "q003",
+          "question_number": 3,
+          "question_text": "What is the name of the landmark shown in the image?",
+          "question_type": "short_answer",
+          "question_image": "https://example.com/images/eiffel_tower.jpg",
+          "correct_answer": "Eiffel Tower",
+          "marks": 5,
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "section_id": "fib",
+      "section_name": "Section D: Fill in the Blank",
+      "questions": [
+        {
+          "id": "q004",
+          "question_number": 4,
+          "question_text": "The largest planet in our solar system is ____.",
+          "question_type": "fill_in_blank",
+          "correct_answer": "Jupiter",
+          "marks": 5
+        }
+      ]
+    },
+    {
+      "section_id": "essay",
+      "section_name": "Section E: Short Essay",
+      "questions": [
+        {
+          "id": "q005",
+          "question_number": 5,
+          "question_text": "Watch the video about the water cycle. Briefly explain evaporation.",
+          "question_type": "short_essay",
+          "question_video": "https://example.com/videos/water_cycle.mp4",
+          "correct_answer": "Model Answer: Evaporation is the process where liquid water heats up, turns into a gas (water vapor), and rises into the atmosphere.",
+          "marks": 10,
+          "is_free": false,
+          "difficulty_level": "intermediate",
+          "time_allocation": 300
+        }
+      ]
+    },
+    {
+      "section_id": "match",
+      "section_name": "Section F: Matching",
+      "questions": [
+        {
+          "id": "q006",
+          "question_number": 6,
+          "question_text": "Match the artist to their painting.",
+          "question_type": "matching",
+          "column_a": [
+            {
+              "item_number": "1",
+              "item_text": "Artist A",
+              "item_image": "https://example.com/images/artist_da_vinci.jpg",
+              "correct_match": "B"
+            },
+            {
+              "item_number": "2",
+              "item_text": "Artist B",
+              "item_image": "https://example.com/images/artist_van_gogh.jpg",
+              "correct_match": "A"
+            }
+          ],
+          "column_b": [
+            {
+              "item_letter": "A",
+              "item_text": "The Starry Night",
+              "item_image": "https://example.com/images/painting_starry_night.jpg"
+            },
+            {
+              "item_letter": "B",
+              "item_text": "Mona Lisa",
+              "item_image": "https://example.com/images/painting_mona_lisa.jpg"
+            }
+          ],
+          "marks": 5,
+          "difficulty_level": "intermediate"
+        }
+      ]
+    },
+    {
+      "section_id": "order",
+      "section_name": "Section G: Ordering",
+      "questions": [
+        {
+          "id": "q007",
+          "question_number": 7,
+          "question_text": "Arrange the butterfly life cycle images in order.",
+          "question_type": "ordering",
+          "items": [
+            {
+              "item_id": "pupa",
+              "item_text": "Pupa",
+              "item_image": "https://example.com/images/lifecycle_pupa.png",
+              "correct_position": 3
+            },
+            {
+              "item_id": "adult",
+              "item_text": "Butterfly",
+              "item_image": "https://example.com/images/lifecycle_butterfly.png",
+              "correct_position": 4
+            },
+            {
+              "item_id": "egg",
+              "item_text": "Eggs",
+              "item_image": "https://example.com/images/lifecycle_eggs.png",
+              "correct_position": 1
+            },
+            {
+              "item_id": "larva",
+              "item_text": "Caterpillar",
+              "item_image": "https://example.com/images/lifecycle_caterpillar.png",
+              "correct_position": 2
+            }
+          ],
+          "correct_order": "egg, larva, pupa, adult",
+          "marks": 5
+        }
+      ]
+    },
+    {
+      "section_id": "mr",
+      "section_name": "Section H: Multiple Response",
+      "questions": [
+        {
+          "id": "q008",
+          "question_number": 8,
+          "question_text": "Select ALL images that show a percussion instrument.",
+          "question_type": "multiple_response",
+          "options": [
+            {
+              "option_letter": "A",
+              "option_text": "Drums",
+              "option_image": "https://example.com/images/instrument_drums.jpg",
+              "is_correct": true
+            },
+            {
+              "option_letter": "B",
+              "option_text": "Flute",
+              "option_image": "https://example.com/images/instrument_flute.jpg",
+              "is_correct": false
+            },
+            {
+              "option_letter": "C",
+              "option_text": "Xylophone",
+              "option_image": "https://example.com/images/instrument_xylophone.jpg",
+              "is_correct": true
+            },
+            {
+              "option_letter": "D",
+              "option_text": "Violin",
+              "option_image": "https://example.com/images/instrument_violin.jpg",
+              "is_correct": false
+            }
+          ],
+          "correct_answers": [
+            "A",
+            "C"
+          ],
+          "marks": 5
+        }
+      ]
+    }
+  ]
+}
