@@ -53,14 +53,79 @@ interface QuizQuestion {
   section_id?: string;
 }
 
+interface QuizSection {
+  section_id: string;
+  section_name: string;
+  section_description?: string;
+  section_image?: string;
+  section_video?: string;
+  section_audio?: string;
+}
+
 interface QuizQuestionsManagerProps {
   questions: QuizQuestion[];
   onChange: (questions: QuizQuestion[]) => void;
+  sections?: QuizSection[];
+  onSectionsChange?: (sections: QuizSection[]) => void;
 }
 
-const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, onChange }) => {
+const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ 
+  questions, 
+  onChange, 
+  sections = [], 
+  onSectionsChange 
+}) => {
   const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSection, setSelectedSection] = useState<number | null>(null);
+  const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
+
+  const addSection = () => {
+    if (!onSectionsChange) return;
+    
+    const newSectionId = `section_${Date.now()}`;
+    const newSection: QuizSection = {
+      section_id: newSectionId,
+      section_name: `Section ${sections.length + 1}`,
+      section_description: '',
+    };
+    onSectionsChange([...sections, newSection]);
+  };
+
+  const updateSection = (index: number, updatedSection: QuizSection) => {
+    if (!onSectionsChange) return;
+    
+    const updatedSections = [...sections];
+    updatedSections[index] = updatedSection;
+    onSectionsChange(updatedSections);
+  };
+
+  const deleteSection = (index: number) => {
+    if (!onSectionsChange) return;
+    
+    const sectionToDelete = sections[index];
+    const updatedSections = sections.filter((_, i) => i !== index);
+    
+    // Remove section_id from questions that belonged to this section
+    const updatedQuestions = questions.map(q => 
+      q.section_id === sectionToDelete.section_id 
+        ? { ...q, section_id: undefined }
+        : q
+    );
+    
+    onSectionsChange(updatedSections);
+    onChange(updatedQuestions);
+  };
+
+  const openSectionModal = (index: number) => {
+    setSelectedSection(index);
+    setIsSectionModalOpen(true);
+  };
+
+  const closeSectionModal = () => {
+    setSelectedSection(null);
+    setIsSectionModalOpen(false);
+  };
 
   const addQuestion = () => {
     const newQuestionNumber = questions.length + 1;
@@ -860,8 +925,169 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
     );
   };
 
+  const renderSectionModal = () => {
+    if (!isSectionModalOpen || selectedSection === null || !sections[selectedSection]) return null;
+
+    const section = sections[selectedSection];
+
+    const updateSectionField = (field: keyof QuizSection, value: any) => {
+      const updatedSection = { ...section, [field]: value };
+      updateSection(selectedSection, updatedSection);
+    };
+
+    return createPortal(
+      <div className="modal-overlay" onClick={closeSectionModal}>
+        <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Edit Section</h2>
+            <button onClick={closeSectionModal} className="modal-close">×</button>
+          </div>
+          
+          <div className="modal-body">
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label>Section Name</label>
+                <input
+                  type="text"
+                  value={section.section_name}
+                  onChange={(e) => updateSectionField('section_name', e.target.value)}
+                  placeholder="Enter section name..."
+                />
+              </div>
+              
+              <div className="form-group full-width">
+                <label>Section Description</label>
+                <textarea
+                  value={section.section_description || ''}
+                  onChange={(e) => updateSectionField('section_description', e.target.value)}
+                  rows={3}
+                  placeholder="Enter section description..."
+                />
+              </div>
+              
+              <div className="form-group">
+                <MediaUpload
+                  value={section.section_image || ''}
+                  onChange={(url) => updateSectionField('section_image', url)}
+                  placeholder="https://example.com/section-image.jpg"
+                  acceptTypes="image/*,.jpg,.jpeg,.png,.gif,.webp"
+                  label="Section Image"
+                  mediaType="image"
+                />
+              </div>
+              
+              <div className="form-group">
+                <MediaUpload
+                  value={section.section_video || ''}
+                  onChange={(url) => updateSectionField('section_video', url)}
+                  placeholder="https://example.com/section-video.mp4"
+                  acceptTypes="video/*,.mp4,.avi,.mov,.wmv,.flv,.webm"
+                  label="Section Video"
+                  mediaType="video"
+                />
+              </div>
+              
+              <div className="form-group">
+                <MediaUpload
+                  value={section.section_audio || ''}
+                  onChange={(url) => updateSectionField('section_audio', url)}
+                  placeholder="https://example.com/section-audio.mp3"
+                  acceptTypes="audio/*,.mp3,.wav,.ogg,.aac,.flac"
+                  label="Section Audio"
+                  mediaType="audio"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="modal-footer">
+            <button onClick={closeSectionModal} className="btn btn-secondary">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
   return (
     <div className="quiz-questions-manager">
+      {onSectionsChange && (
+        <div className="sections-section">
+          <div className="section-header">
+            <div className="section-title">
+              <h2>Sections ({sections.length})</h2>
+            </div>
+            <button onClick={addSection} className="btn btn-primary">
+              + Add Section
+            </button>
+          </div>
+          
+          <div className="sections-list">
+            {sections.length === 0 ? (
+              <div className="empty-state">
+                <p>No sections yet. Click "Add Section" to get started.</p>
+              </div>
+            ) : (
+              sections.map((section, index) => (
+                <div key={section.section_id} className="section-card">
+                  <div className="section-header">
+                    <div className="section-info">
+                      <div className="section-name">{section.section_name}</div>
+                      <div className="section-id">ID: {section.section_id}</div>
+                      <div className="section-question-count">
+                        {questions.filter(q => q.section_id === section.section_id).length} questions
+                      </div>
+                    </div>
+                    <div className="section-actions">
+                      <button 
+                        onClick={() => openSectionModal(index)}
+                        className="btn-icon edit"
+                        title="Edit Section"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        onClick={() => deleteSection(index)}
+                        className="btn-icon delete"
+                        title="Delete Section"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {section.section_description && (
+                    <div className="section-description">
+                      {section.section_description}
+                    </div>
+                  )}
+                  
+                  <div className="section-media">
+                    {section.section_image && (
+                      <div className="media-preview">
+                        <img src={section.section_image} alt="Section" style={{ maxWidth: '100px', maxHeight: '60px' }} />
+                      </div>
+                    )}
+                    {section.section_video && (
+                      <div className="media-preview">
+                        <video src={section.section_video} controls style={{ maxWidth: '100px', maxHeight: '60px' }} />
+                      </div>
+                    )}
+                    {section.section_audio && (
+                      <div className="media-preview">
+                        <audio src={section.section_audio} controls style={{ maxWidth: '100px' }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="manager-header">
         <div className="manager-title">
           <h2>Questions ({questions.length})</h2>
@@ -882,6 +1108,7 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
       </div>
       
       {renderEditModal()}
+      {renderSectionModal()}
     </div>
   );
 };

@@ -81,8 +81,22 @@ const TopicQuizzes: React.FC = () => {
   };
 
   const handleDelete = async (quizId: string) => {
-    if (!confirm('Are you sure you want to delete this quiz?')) return;
-    alert(`Delete quiz: ${quizId}\n\nDelete API endpoint needed to implement this feature.`);
+    if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) return;
+    
+    try {
+      const response = await deleteQuiz(quizId);
+      
+      if (response.data.success) {
+        // Remove the deleted quiz from local state
+        setQuizzes(quizzes.filter(quiz => quiz.id !== quizId));
+        alert('Quiz deleted successfully!');
+      } else {
+        alert('Failed to delete quiz: ' + (response.data.error || 'Unknown error'));
+      }
+    } catch (error: any) {
+      console.error('Error deleting quiz:', error);
+      alert('Error deleting quiz: ' + (error.response?.data?.error || error.message || 'Unknown error'));
+    }
   };
 
   const handleAddQuiz = () => {

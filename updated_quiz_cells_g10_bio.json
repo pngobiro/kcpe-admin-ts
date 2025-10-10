@@ -1,0 +1,569 @@
+{
+  "title": "Cell Structure and Function Quiz - Local Test Success",
+  "description": "A quiz covering basic concepts of cell biology including cell structure, function, and photosynthesis",
+  "paper_info": {
+    "paper_number": 1,
+    "paper_level": "General",
+    "paper_type": "quiz",
+    "subject_id": "biology",
+    "total_questions": 30,
+    "total_marks": 50,
+    "estimated_time_minutes": 45
+  },
+  "instructions": [
+    "Answer ALL questions in this quiz.",
+    "Read each question carefully before answering.",
+    "Select the best answer for multiple choice questions."
+  ],
+  "sections": [
+    {
+      "section_id": "mcq",
+      "section_name": "Section A: Multiple Choice Questions",
+      "section_description": "Choose the single best answer for each question.",
+      "questions": [
+        {
+          "id": "q_cell_basic_unit_001",
+          "question_number": 1,
+          "question_text": "What is the basic unit of life?",
+          "question_type": "multiple_choice",
+          "question_image": "",
+          "question_video": "",
+          "question_audio": "",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "learning_objective": "Identify the basic unit of life",
+          "options": [
+            {
+              "option_letter": "A",
+              "option_text": "Atom",
+              "option_image": "",
+              "is_correct": false,
+              "feedback": "Atoms are the basic units of matter, not life."
+            },
+            {
+              "option_letter": "B",
+              "option_text": "Cell",
+              "option_image": "",
+              "is_correct": true,
+              "feedback": "Correct! The cell is the basic structural and functional unit of life."
+            },
+            {
+              "option_letter": "C",
+              "option_text": "Tissue",
+              "option_image": "",
+              "is_correct": false,
+              "feedback": "Tissues are made up of cells."
+            },
+            {
+              "option_letter": "D",
+              "option_text": "Organ",
+              "option_image": "",
+              "is_correct": false,
+              "feedback": "Organs are made up of tissues."
+            }
+          ],
+          "correct_answer": "B",
+          "explanation": "The cell is the basic unit of life."
+        },
+        {
+          "id": "q_cell_membrane_004",
+          "question_number": 2,
+          "question_text": "Which organelle is responsible for controlling what enters and leaves the cell?",
+          "question_type": "multiple_choice",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "Nucleus", "is_correct": false},
+            {"option_letter": "B", "option_text": "Cell membrane", "is_correct": true},
+            {"option_letter": "C", "option_text": "Mitochondria", "is_correct": false},
+            {"option_letter": "D", "option_text": "Ribosome", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "The cell membrane controls the movement of substances in and out of the cell."
+        },
+        {
+          "id": "q_photosynthesis_location_005",
+          "question_number": 3,
+          "question_text": "In which part of the plant cell does photosynthesis mainly occur?",
+          "question_type": "multiple_choice",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "Nucleus", "is_correct": false},
+            {"option_letter": "B", "option_text": "Chloroplast", "is_correct": true},
+            {"option_letter": "C", "option_text": "Vacuole", "is_correct": false},
+            {"option_letter": "D", "option_text": "Cell wall", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Chloroplasts contain chlorophyll and are the site of photosynthesis."
+        },
+        {
+          "id": "q_energy_currency_006",
+          "question_number": 4,
+          "question_text": "What is the energy currency of the cell?",
+          "question_type": "multiple_choice",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "intermediate",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "Glucose", "is_correct": false},
+            {"option_letter": "B", "option_text": "ATP", "is_correct": true},
+            {"option_letter": "C", "option_text": "DNA", "is_correct": false},
+            {"option_letter": "D", "option_text": "Protein", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "ATP (Adenosine Triphosphate) is the energy currency used by cells."
+        },
+        {
+          "id": "q_mitochondria_function_007",
+          "question_number": 5,
+          "question_text": "What is the primary function of mitochondria in a cell?",
+          "question_type": "multiple_choice",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "intermediate",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "Protein synthesis", "is_correct": false},
+            {"option_letter": "B", "option_text": "Energy production", "is_correct": true},
+            {"option_letter": "C", "option_text": "Storage", "is_correct": false},
+            {"option_letter": "D", "option_text": "Waste removal", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Mitochondria are known as the powerhouse of the cell, producing ATP energy."
+        }
+      ]
+    },
+    {
+      "section_id": "tf",
+      "section_name": "Section B: True/False Questions",
+      "section_description": "State whether each statement is true or false.",
+      "questions": [
+        {
+          "id": "q_photosynthesis_glucose_002",
+          "question_number": 6,
+          "question_text": "Plants perform photosynthesis to produce glucose.",
+          "question_type": "true_false",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "learning_objective": "Understand the purpose of photosynthesis",
+          "options": [
+            {"option_letter": "True", "option_text": "True", "is_correct": true},
+            {"option_letter": "False", "option_text": "False", "is_correct": false}
+          ],
+          "correct_answer": "True",
+          "explanation": "Yes, plants use photosynthesis to convert light energy into chemical energy stored in glucose."
+        },
+        {
+          "id": "q_animal_cells_008",
+          "question_number": 7,
+          "question_text": "Animal cells have a cell wall.",
+          "question_type": "true_false",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 1,
+          "options": [
+            {"option_letter": "True", "option_text": "True", "is_correct": false},
+            {"option_letter": "False", "option_text": "False", "is_correct": true}
+          ],
+          "correct_answer": "False",
+          "explanation": "Animal cells do not have cell walls. Only plant cells have cell walls."
+        },
+        {
+          "id": "q_dna_location_009",
+          "question_number": 8,
+          "question_text": "DNA is found in the nucleus of eukaryotic cells.",
+          "question_type": "true_false",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "intermediate",
+          "time_allocation": 1,
+          "options": [
+            {"option_letter": "True", "option_text": "True", "is_correct": true},
+            {"option_letter": "False", "option_text": "False", "is_correct": false}
+          ],
+          "correct_answer": "True",
+          "explanation": "DNA is located in the nucleus of eukaryotic cells."
+        },
+        {
+          "id": "q_prokaryotic_nucleus_010",
+          "question_number": 9,
+          "question_text": "Prokaryotic cells have a nucleus.",
+          "question_type": "true_false",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "intermediate",
+          "time_allocation": 1,
+          "options": [
+            {"option_letter": "True", "option_text": "True", "is_correct": false},
+            {"option_letter": "False", "option_text": "False", "is_correct": true}
+          ],
+          "correct_answer": "False",
+          "explanation": "Prokaryotic cells do not have a true nucleus. Their genetic material is located in a nucleoid region."
+        }
+      ]
+    },
+    {
+      "section_id": "fib",
+      "section_name": "Section C: Fill in the Blank",
+      "section_description": "Complete the sentence with the correct word.",
+      "questions": [
+        {
+          "id": "q_photosynthesis_process_003",
+          "question_number": 10,
+          "question_text": "The process by which plants make their own food is called __________. (one word)",
+          "question_type": "fill_in_blank",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "learning_objective": "Recall the name of the food-making process in plants",
+          "correct_answer": "photosynthesis",
+          "explanation": "Photosynthesis"
+        },
+        {
+          "id": "q_cell_organelle_011",
+          "question_number": 11,
+          "question_text": "The __________ is known as the control center of the cell.",
+          "question_type": "fill_in_blank",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "correct_answer": "nucleus",
+          "explanation": "The nucleus controls cell activities and contains DNA."
+        },
+        {
+          "id": "q_energy_molecule_012",
+          "question_number": 12,
+          "question_text": "__________ is the molecule that stores energy in cells.",
+          "question_type": "fill_in_blank",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "intermediate",
+          "time_allocation": 2,
+          "correct_answer": "ATP",
+          "explanation": "ATP (Adenosine Triphosphate) is the energy currency of cells."
+        }
+      ]
+    },
+    {
+      "section_id": "sa",
+      "section_name": "Section D: Short Answer Questions",
+      "section_description": "Provide brief answers to the following questions.",
+      "questions": [
+        {
+          "id": "q_cell_difference_013",
+          "question_number": 13,
+          "question_text": "Name one difference between plant and animal cells.",
+          "question_type": "short_answer",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "beginner",
+          "time_allocation": 3,
+          "correct_answer": "Plant cells have cell walls, chloroplasts, and large vacuoles while animal cells do not.",
+          "explanation": "Plant cells have cell walls for support, chloroplasts for photosynthesis, and large central vacuoles."
+        },
+        {
+          "id": "q_photosynthesis_equation_014",
+          "question_number": 14,
+          "question_text": "Write the word equation for photosynthesis.",
+          "question_type": "short_answer",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 3,
+          "correct_answer": "Carbon dioxide + water → glucose + oxygen",
+          "explanation": "The photosynthesis equation shows how plants use CO2 and water to produce glucose and oxygen."
+        },
+        {
+          "id": "q_mitochondria_importance_015",
+          "question_number": 15,
+          "question_text": "Why are mitochondria important for cell function?",
+          "question_type": "short_answer",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 3,
+          "correct_answer": "Mitochondria produce ATP, the energy currency of the cell, through cellular respiration.",
+          "explanation": "Mitochondria generate ATP energy that cells need for all their activities."
+        },
+        {
+          "id": "q_ribosome_function_025",
+          "question_number": 25,
+          "question_text": "What is the function of ribosomes in a cell?",
+          "question_type": "short_answer",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "beginner",
+          "time_allocation": 3,
+          "correct_answer": "Ribosomes synthesize proteins by reading mRNA and assembling amino acids.",
+          "explanation": "Ribosomes are the protein factories of the cell."
+        },
+        {
+          "id": "q_cell_transport_026",
+          "question_number": 26,
+          "question_text": "Explain the difference between diffusion and active transport.",
+          "question_type": "short_answer",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 3,
+          "correct_answer": "Diffusion is passive movement of substances from high to low concentration, while active transport requires energy to move substances against the concentration gradient.",
+          "explanation": "Understanding transport mechanisms is essential for cell function."
+        },
+        {
+          "id": "q_dna_structure_027",
+          "question_number": 27,
+          "question_text": "Describe the structure of DNA.",
+          "question_type": "short_answer",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 3,
+          "correct_answer": "DNA is a double helix structure consisting of two strands of nucleotides connected by hydrogen bonds between complementary base pairs (A-T, C-G).",
+          "explanation": "DNA structure is fundamental to understanding inheritance and cell function."
+        }
+      ]
+    },
+    {
+      "section_id": "essay",
+      "section_name": "Section E: Short Essay Questions",
+      "section_description": "Provide detailed explanations for the following questions.",
+      "questions": [
+        {
+          "id": "q_cell_theory_016",
+          "question_number": 16,
+          "question_text": "Explain the cell theory and its importance in biology.",
+          "question_type": "short_essay",
+          "is_free": false,
+          "marks": 5,
+          "difficulty_level": "intermediate",
+          "time_allocation": 300,
+          "correct_answer": "The cell theory states that: 1) All living organisms are composed of cells, 2) The cell is the basic unit of life, and 3) All cells come from pre-existing cells. It is important because it provides the foundation for understanding biological organization and explains that life arises from cells.",
+          "explanation": "The cell theory revolutionized biology by establishing cells as the fundamental units of life."
+        },
+        {
+          "id": "q_photosynthesis_process_017",
+          "question_number": 17,
+          "question_text": "Describe the process of photosynthesis in detail, including the role of chloroplasts.",
+          "question_type": "short_essay",
+          "is_free": false,
+          "marks": 5,
+          "difficulty_level": "advanced",
+          "time_allocation": 300,
+          "correct_answer": "Photosynthesis occurs in chloroplasts using chlorophyll. Light energy is captured and used to convert carbon dioxide and water into glucose and oxygen. The process has two stages: light-dependent reactions in thylakoids that produce ATP and NADPH, and light-independent reactions in the stroma that use these to fix CO2 into glucose.",
+          "explanation": "Photosynthesis is a complex process that converts light energy into chemical energy stored in glucose."
+        },
+        {
+          "id": "q_enzyme_function_028",
+          "question_number": 28,
+          "question_text": "What are enzymes and how do they work in biological systems?",
+          "question_type": "short_essay",
+          "is_free": false,
+          "marks": 4,
+          "difficulty_level": "intermediate",
+          "time_allocation": 240,
+          "correct_answer": "Enzymes are biological catalysts that speed up chemical reactions in cells. They work by lowering the activation energy required for reactions, allowing them to occur at body temperature. Each enzyme is specific to certain substrates and can be affected by factors like temperature and pH.",
+          "explanation": "Enzymes are crucial for maintaining life processes at efficient rates."
+        },
+        {
+          "id": "q_ecosystem_energy_029",
+          "question_number": 29,
+          "question_text": "Explain how energy flows through an ecosystem, including the roles of producers, consumers, and decomposers.",
+          "question_type": "short_essay",
+          "is_free": false,
+          "marks": 4,
+          "difficulty_level": "advanced",
+          "time_allocation": 300,
+          "correct_answer": "Energy flows through ecosystems in one direction. Producers (plants) capture sunlight and convert it to chemical energy through photosynthesis. Primary consumers eat producers, secondary consumers eat primary consumers, and so on. Decomposers break down dead organisms, recycling nutrients but not energy. Energy is lost as heat at each trophic level.",
+          "explanation": "Energy flow is unidirectional and decreases at each trophic level."
+        },
+        {
+          "id": "q_evolution_evidence_030",
+          "question_number": 30,
+          "question_text": "Discuss three pieces of evidence that support the theory of evolution by natural selection.",
+          "question_type": "short_essay",
+          "is_free": false,
+          "marks": 5,
+          "difficulty_level": "advanced",
+          "time_allocation": 300,
+          "correct_answer": "1) Fossil record shows gradual changes in species over time. 2) Comparative anatomy reveals homologous structures in different species. 3) Molecular biology shows similarities in DNA sequences between related species. 4) Observed natural selection in populations (like antibiotic resistance in bacteria). 5) Biogeography shows species distribution patterns that match continental drift.",
+          "explanation": "Multiple lines of evidence from different scientific fields support evolutionary theory."
+        }
+      ]
+    },
+    {
+      "section_id": "match",
+      "section_name": "Section F: Matching Questions",
+      "section_description": "Match the cell organelles with their functions.",
+      "questions": [
+        {
+          "id": "q_organelle_functions_018",
+          "question_number": 18,
+          "question_text": "Match each cell organelle with its primary function.",
+          "question_type": "matching",
+          "is_free": true,
+          "marks": 3,
+          "difficulty_level": "intermediate",
+          "time_allocation": 180,
+          "column_a": [
+            {"item_number": "1", "item_text": "Nucleus", "correct_match": "A"},
+            {"item_number": "2", "item_text": "Mitochondria", "correct_match": "B"},
+            {"item_number": "3", "item_text": "Ribosomes", "correct_match": "C"},
+            {"item_number": "4", "item_text": "Endoplasmic Reticulum", "correct_match": "D"}
+          ],
+          "column_b": [
+            {"item_letter": "A", "item_text": "Control center containing DNA"},
+            {"item_letter": "B", "item_text": "Energy production (ATP)"},
+            {"item_letter": "C", "item_text": "Protein synthesis"},
+            {"item_letter": "D", "item_text": "Protein and lipid transport"}
+          ],
+          "explanation": "Understanding organelle functions is crucial for cell biology."
+        },
+        {
+          "id": "q_biology_terms_019",
+          "question_number": 19,
+          "question_text": "Match the biological terms with their definitions.",
+          "question_type": "matching",
+          "is_free": true,
+          "marks": 3,
+          "difficulty_level": "intermediate",
+          "time_allocation": 180,
+          "column_a": [
+            {"item_number": "1", "item_text": "Eukaryotic", "correct_match": "A"},
+            {"item_number": "2", "item_text": "Prokaryotic", "correct_match": "B"},
+            {"item_number": "3", "item_text": "Organelle", "correct_match": "C"},
+            {"item_number": "4", "item_text": "Cytoplasm", "correct_match": "D"}
+          ],
+          "column_b": [
+            {"item_letter": "A", "item_text": "Cells with membrane-bound organelles"},
+            {"item_letter": "B", "item_text": "Cells without membrane-bound organelles"},
+            {"item_letter": "C", "item_text": "Specialized structures within cells"},
+            {"item_letter": "D", "item_text": "Jelly-like substance inside cells"}
+          ],
+          "explanation": "These terms form the foundation of cell biology vocabulary."
+        }
+      ]
+    },
+    {
+      "section_id": "order",
+      "section_name": "Section G: Ordering Questions",
+      "section_description": "Arrange the items in the correct order.",
+      "questions": [
+        {
+          "id": "q_photosynthesis_steps_020",
+          "question_number": 20,
+          "question_text": "Arrange the steps of photosynthesis in the correct order.",
+          "question_type": "ordering",
+          "is_free": true,
+          "marks": 3,
+          "difficulty_level": "intermediate",
+          "time_allocation": 240,
+          "items": [
+            {"item_id": "light_capture", "item_text": "Chlorophyll captures light energy", "correct_position": 1},
+            {"item_id": "water_split", "item_text": "Water molecules are split", "correct_position": 2},
+            {"item_id": "atp_production", "item_text": "ATP and NADPH are produced", "correct_position": 3},
+            {"item_id": "co2_fixation", "item_text": "CO2 is fixed into glucose", "correct_position": 4},
+            {"item_id": "oxygen_release", "item_text": "Oxygen is released as waste", "correct_position": 5}
+          ],
+          "correct_order": "Light capture, water split, ATP production, CO2 fixation, oxygen release",
+          "explanation": "Photosynthesis follows a specific sequence of energy conversion steps."
+        },
+        {
+          "id": "q_cell_cycle_021",
+          "question_number": 21,
+          "question_text": "Arrange the stages of the cell cycle in order.",
+          "question_type": "ordering",
+          "is_free": true,
+          "marks": 3,
+          "difficulty_level": "advanced",
+          "time_allocation": 240,
+          "items": [
+            {"item_id": "g1", "item_text": "G1 phase (cell growth)", "correct_position": 1},
+            {"item_id": "s", "item_text": "S phase (DNA replication)", "correct_position": 2},
+            {"item_id": "g2", "item_text": "G2 phase (preparation for division)", "correct_position": 3},
+            {"item_id": "mitosis", "item_text": "Mitosis (nuclear division)", "correct_position": 4},
+            {"item_id": "cytokinesis", "item_text": "Cytokinesis (cytoplasmic division)", "correct_position": 5}
+          ],
+          "correct_order": "G1, S, G2, Mitosis, Cytokinesis",
+          "explanation": "The cell cycle ensures proper cell division and growth."
+        }
+      ]
+    },
+    {
+      "section_id": "mr",
+      "section_name": "Section H: Multiple Response Questions",
+      "section_description": "Select ALL correct answers for each question.",
+      "questions": [
+        {
+          "id": "q_cell_characteristics_022",
+          "question_number": 22,
+          "question_text": "Which of the following are characteristics of living cells? (Select all that apply)",
+          "question_type": "multiple_response",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "beginner",
+          "time_allocation": 120,
+          "options": [
+            {"option_letter": "A", "option_text": "Reproduction", "is_correct": true},
+            {"option_letter": "B", "option_text": "Growth", "is_correct": true},
+            {"option_letter": "C", "option_text": "Movement", "is_correct": false},
+            {"option_letter": "D", "option_text": "Response to environment", "is_correct": true},
+            {"option_letter": "E", "option_text": "Metabolism", "is_correct": true}
+          ],
+          "correct_answers": ["A", "B", "D", "E"],
+          "explanation": "Living cells exhibit characteristics like reproduction, growth, response to environment, and metabolism."
+        },
+        {
+          "id": "q_plant_cell_organelles_023",
+          "question_number": 23,
+          "question_text": "Which organelles are typically found in plant cells but not in animal cells? (Select all that apply)",
+          "question_type": "multiple_response",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 120,
+          "options": [
+            {"option_letter": "A", "option_text": "Cell wall", "is_correct": true},
+            {"option_letter": "B", "option_text": "Chloroplast", "is_correct": true},
+            {"option_letter": "C", "option_text": "Large central vacuole", "is_correct": true},
+            {"option_letter": "D", "option_text": "Mitochondria", "is_correct": false},
+            {"option_letter": "E", "option_text": "Nucleus", "is_correct": false}
+          ],
+          "correct_answers": ["A", "B", "C"],
+          "explanation": "Plant cells have cell walls, chloroplasts, and large central vacuoles that animal cells lack."
+        },
+        {
+          "id": "q_energy_processes_024",
+          "question_number": 24,
+          "question_text": "Which processes require energy input in cells? (Select all that apply)",
+          "question_type": "multiple_response",
+          "is_free": true,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 120,
+          "options": [
+            {"option_letter": "A", "option_text": "Photosynthesis", "is_correct": true},
+            {"option_letter": "B", "option_text": "Active transport", "is_correct": true},
+            {"option_letter": "C", "option_text": "Diffusion", "is_correct": false},
+            {"option_letter": "D", "option_text": "Osmosis", "is_correct": false},
+            {"option_letter": "E", "option_text": "Protein synthesis", "is_correct": true}
+          ],
+          "correct_answers": ["A", "B", "E"],
+          "explanation": "Photosynthesis, active transport, and protein synthesis all require energy input from ATP."
+        }
+      ]
+    }
+  ]
+}

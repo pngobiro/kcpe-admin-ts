@@ -1,44 +1,85 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import QuizQuestionsManager from '../components/QuizQuestionsManager';
-import { getQuiz } from '../api';
+import { getQuiz, saveQuizQuestions, getQuizQuestions } from '../api';
 import '../styles/global.css';
+
+// --- COMPREHENSIVE TYPESCRIPT INTERFACES FOR QUIZ QUESTIONS ---
+
+type QuestionType = 
+  | 'multiple_choice'
+  | 'true_false'
+  | 'short_answer'
+  | 'fill_in_blank'
+  | 'short_essay'
+  | 'matching'
+  | 'ordering'
+  | 'multiple_response';
+
+interface Multimedia {
+  image?: string;
+  video?: string;
+  audio?: string;
+}
 
 interface QuizOption {
   option_letter: string;
   option_text: string;
   option_image?: string;
+  option_video?: string;
+  option_audio?: string;
   is_correct: boolean;
+  feedback?: string;
+}
+
+interface MatchingItem {
+  item_number?: string;
+  item_letter?: string;
+  item_text: string;
+  item_image?: string;
+  correct_match?: string;
+}
+
+interface OrderingItem {
+  item_id: string;
+  item_text: string;
+  item_image?: string;
+  correct_position: number;
 }
 
 interface QuizQuestion {
-  id?: string;
+  id: string;
   question_number: number;
   question_text: string;
+  question_type: QuestionType;
   question_image?: string;
   question_video?: string;
   question_audio?: string;
-  question_type: 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_in_blank';
-  options: QuizOption[];
+  options?: QuizOption[];
+  column_a?: MatchingItem[];
+  column_b?: MatchingItem[];
+  items?: OrderingItem[];
   correct_answer?: string;
+  correct_answers?: string[];
+  correct_order?: string;
   explanation?: string;
-  explanation_image?: string;
-  explanation_video?: string;
   marks: number;
-  
-  // Enhanced fields for version control, access, and organization
-  question_id?: string;
-  version?: string;
   is_free?: boolean;
-  part?: string;
-  main_question?: number;
-  sub_question?: string;
-  has_sub_questions?: boolean;
   difficulty_level?: string;
   time_allocation?: number;
   learning_objective?: string;
-  last_modified?: string;
-  change_log?: string;
+  // Metadata for reconstructing sections
+  section_id?: string; 
+}
+
+interface QuizSection {
+  section_id: string;
+  section_name: string;
+  section_description?: string;
+  section_image?: string;
+  section_video?: string;
+  section_audio?: string;
+  questions: QuizQuestion[];
 }
 
 interface Quiz {
@@ -46,7 +87,7 @@ interface Quiz {
   name: string;
   topic_id: string;
   quiz_type: string;
-  quiz_data_url?: string;
+  questions_data_url?: string;
   is_published: boolean;
 }
 
@@ -55,6 +96,8 @@ const QuizQuestionsUpload: React.FC = () => {
   const navigate = useNavigate();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  // State to hold section metadata without questions
+  const [sections, setSections] = useState<Omit<QuizSection, 'questions'>[]>([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -79,54 +122,59 @@ const QuizQuestionsUpload: React.FC = () => {
         
         // If the quiz has a data URL, fetch the existing questions
         if (quizData.quiz_data_url) {
-          console.log('Loading existing questions from:', quizData.quiz_data_url);
+          console.log('Loading existing questions from API');
           try {
-            console.log('Fetching questions from URL:', quizData.quiz_data_url);
+            const questionsResponse = await getQuizQuestions(quizId!);
             
-            // Try to fetch through our proxy first to handle authentication
-            let questionsResponse: Response;
-            let questionsData: any;
-            
-            try {
-              console.log('Attempting to fetch via proxy...');
-              questionsResponse = await fetch(`/api/quiz-data/proxy?url=${encodeURIComponent(quizData.quiz_data_url)}`);
+            if (questionsResponse.data.success && questionsResponse.data.data) {
+              const questionsData = questionsResponse.data.data;
+              console.log('Successfully fetched questions from API:', questionsData);
               
-              if (questionsResponse.ok) {
-                const proxyData = await questionsResponse.json();
-                if (proxyData.success) {
-                  questionsData = proxyData.data;
-                  console.log('Successfully fetched via proxy');
-                } else {
-                  throw new Error(proxyData.error || 'Proxy fetch failed');
-                }
+              // Process the question data - expect full structure with sections
+              if (questionsData.sections && Array.isArray(questionsData.sections)) {
+                // Process nested format with sections
+                const allQuestions: QuizQuestion[] = [];
+                const sectionInfo: Omit<QuizSection, 'questions'>[] = [];
+
+                questionsData.sections.forEach((section: any) => {
+                  sectionInfo.push({
+                    section_id: section.section_id,
+                    section_name: section.section_name,
+                    section_description: section.section_description,
+                    section_image: section.section_image,
+                    section_video: section.section_video,
+                    section_audio: section.section_audio,
+                  });
+                  
+                  if (section.questions && Array.isArray(section.questions)) {
+                    section.questions.forEach((q: any) => {
+                      allQuestions.push({
+                        ...q,
+                        id: q.id || `q_${Date.now()}_${allQuestions.length}`,
+                        section_id: section.section_id, // Tag question with its section
+                      });
+                    });
+                  }
+                });
+                
+                setSections(sectionInfo);
+                setQuestions(allQuestions);
+              } else if (Array.isArray(questionsData)) {
+                // Fallback: if it's a flat array, convert to sections format
+                const sectionId = 'default_section';
+                const sectionInfo = [{ section_id: sectionId, section_name: 'Main Section' }];
+                const questionsWithSection = questionsData.map(q => ({ ...q, section_id: sectionId }));
+                setSections(sectionInfo);
+                setQuestions(questionsWithSection);
               } else {
-                throw new Error(`Proxy returned ${questionsResponse.status}`);
+                console.warn('Unexpected questions data format:', questionsData);
+                initializeEmptyQuestions();
               }
-            } catch (proxyError) {
-              console.warn('Proxy fetch failed, trying direct fetch:', proxyError);
-              
-              // Fallback to direct fetch
-              questionsResponse = await fetch(quizData.quiz_data_url);
-              
-              if (!questionsResponse.ok) {
-                if (questionsResponse.status === 401) {
-                  throw new Error('Authentication required - Quiz data is protected. The quiz data URL requires API authentication. Please contact your administrator or use the upload functionality to add questions manually.');
-                }
-                throw new Error(`Failed to fetch quiz data: ${questionsResponse.status} ${questionsResponse.statusText}`);
-              }
-              
-              questionsData = await questionsResponse.json();
+            } else {
+              throw new Error(questionsResponse.data.error || 'Failed to fetch questions');
             }
-            
-            // Check for API error responses
-            if (questionsData.success === false && questionsData.error) {
-              throw new Error(`API Error: ${questionsData.error}`);
-            }
-            
-            // Process the question data
-            processQuestionData(questionsData);
           } catch (fetchError) {
-            console.error('Error fetching questions from URL:', fetchError);
+            console.error('Error fetching questions from API:', fetchError);
             // Show user-friendly error message
             setError(fetchError instanceof Error ? fetchError.message : 'Failed to load existing quiz questions');
             initializeEmptyQuestions();
@@ -149,282 +197,62 @@ const QuizQuestionsUpload: React.FC = () => {
   };
 
   const initializeEmptyQuestions = () => {
+    const sectionId = 'default_section';
+    setSections([{ section_id: sectionId, section_name: 'Main Section' }]);
     setQuestions([
       {
+        id: `q_${Date.now()}`,
         question_number: 1,
-        question_text: 'Enter your question here...',
-        question_type: 'multiple_choice' as const,
-        options: [
-          { option_letter: 'A', option_text: '', is_correct: false },
-          { option_letter: 'B', option_text: '', is_correct: false },
-          { option_letter: 'C', option_text: '', is_correct: false },
-          { option_letter: 'D', option_text: '', is_correct: false },
-        ],
+        question_text: 'Enter your first question here...',
+        question_type: 'multiple_choice',
+        options: [{ option_letter: 'A', option_text: 'Option A', is_correct: true }],
+        correct_answer: 'A',
         marks: 1,
-        
-        // Enhanced default fields
-        question_id: 'q_1',
-        version: '1.0',
-        is_free: false, // Default to paid
-        part: undefined,
-        main_question: 1,
-        sub_question: undefined,
-        has_sub_questions: false,
-        difficulty_level: 'INTERMEDIATE',
-        time_allocation: 2,
-        learning_objective: '',
-        last_modified: new Date().toISOString().split('T')[0],
-        change_log: 'Initial creation'
+        section_id: sectionId,
       },
     ]);
   };
 
-  const processQuestionData = (questionsData: any) => {
-    console.log('Processing question data:', questionsData);
-    
-    // Handle different possible JSON structures
-    let questionsArray = [];
-    if (Array.isArray(questionsData)) {
-      questionsArray = questionsData;
-    } else if (questionsData.questions && Array.isArray(questionsData.questions)) {
-      questionsArray = questionsData.questions;
-    } else if (questionsData.data && questionsData.data.questions && Array.isArray(questionsData.data.questions)) {
-      // Handle Cloudflare worker response format: { success: true, data: { questions: [...] } }
-      questionsArray = questionsData.data.questions;
-    } else if (questionsData.data && Array.isArray(questionsData.data)) {
-      questionsArray = questionsData.data;
-    }
-    
-    console.log('Found questions array:', questionsArray.length, 'questions');
-    
-    if (questionsArray.length > 0) {
-      // Validate and normalize the questions structure
-      const normalizedQuestions = questionsArray.map((q: any, index: number) => {
-        // Handle Cloudflare API format vs standard format
-        const questionType = q.type === 'MULTIPLE_CHOICE' ? 'multiple_choice' : 
-                           q.type === 'TRUE_FALSE' ? 'true_false' : 
-                           q.type === 'FILL_IN_BLANK' || q.type === 'FILL_IN_THE_BLANK' ? 'fill_in_blank' :
-                           q.question_type || 'multiple_choice';
-        
-        let options = [];
-        let correctAnswer = q.correctAnswer || q.correct_answer || q.answer || undefined;
 
-        if (q.options && Array.isArray(q.options)) {
-          // Cloudflare API format with options array
-          options = q.options.map((opt: any, optIndex: number) => ({
-            option_letter: opt.name || opt.option_letter || String.fromCharCode(65 + optIndex),
-            option_text: opt.optionText || opt.option_text || opt.text || '',
-            option_image: opt.optionImage || opt.option_image || opt.image || undefined,
-            is_correct: opt.isCorrectAnswer || opt.is_correct || opt.correct || false
-          }));
-
-          // For fill-in-blank questions, extract the answer from options
-          if (questionType === 'fill_in_blank' && options.length > 0) {
-            const correctOption = options.find((opt: any) => opt.is_correct);
-            if (correctOption) {
-              correctAnswer = correctOption.option_text;
-            }
-          }
-        } else if (q.type === 'TRUE_FALSE') {
-          // True/False question - handle both formats
-          if (q.isCorrectAnswer !== undefined) {
-            options = [
-              { option_letter: 'True', option_text: 'True', is_correct: q.isCorrectAnswer === true },
-              { option_letter: 'False', option_text: 'False', is_correct: q.isCorrectAnswer === false },
-            ];
-          } else {
-            options = [
-              { option_letter: 'True', option_text: 'True', is_correct: false },
-              { option_letter: 'False', option_text: 'False', is_correct: false },
-            ];
-          }
-        } else if (questionType === 'fill_in_blank') {
-          // Fill-in-blank question without options array - use correctAnswer directly
-          options = []; // No options needed for display
-          // correctAnswer is already set above
-        } else {
-          // Default empty options for multiple choice
-          options = [
-            { option_letter: 'A', option_text: '', is_correct: false },
-            { option_letter: 'B', option_text: '', is_correct: false },
-            { option_letter: 'C', option_text: '', is_correct: false },
-            { option_letter: 'D', option_text: '', is_correct: false },
-          ];
-        }
-
-        return {
-          id: q.id || q.questionId || undefined,
-          question_number: q.number || q.question_number || index + 1,
-          question_text: q.questionText || q.quizText || q.question_text || q.question || '',
-          question_image: q.questionImage || q.quizImage || q.question_image || q.image || undefined,
-          question_video: q.questionVideo || q.quizVideo || q.question_video || q.video || undefined,
-          question_audio: q.questionAudio || q.quizAudio || q.question_audio || q.audio || undefined,
-          question_type: questionType,
-          options: options,
-          correct_answer: correctAnswer,
-          explanation: q.explanation || q.solutionText || undefined,
-          explanation_image: q.explanation_image || undefined,
-          explanation_video: q.explanation_video || undefined,
-          marks: q.marks || q.points || q.paperLevel || 1,
-          
-          // Enhanced fields for version control, access, and organization
-          question_id: q.questionId || `q_${index + 1}`,
-          version: q.questionVersion || q.version || "1.0",
-          is_free: q.isFree !== undefined ? q.isFree : (q.is_free !== undefined ? q.is_free : true), // Default to free if not specified
-          part: q.part || q.questionPart || undefined,
-          main_question: q.mainQuestion || q.main_question || (q.number || index + 1),
-          sub_question: q.subQuestion || q.sub_question || undefined,
-          has_sub_questions: q.hasSubQuestions || q.has_sub_questions || false,
-          difficulty_level: q.difficultyLevel || q.difficulty_level || q.difficulty || 'INTERMEDIATE',
-          time_allocation: q.timeAllocation || q.time_allocation || q.estimatedTime || 2,
-          learning_objective: q.learningObjective || q.learning_objective || q.objective || undefined,
-          last_modified: q.lastModified || q.last_modified || new Date().toISOString().split('T')[0],
-          change_log: q.changeLog || q.change_log || undefined
-        };
-      });
-      
-      setQuestions(normalizedQuestions);
-      console.log(`Loaded ${normalizedQuestions.length} existing questions:`, normalizedQuestions);
-    } else {
-      console.log('No questions found, initializing empty template');
-      // No questions found, start with empty template
-      initializeEmptyQuestions();
-    }
-  };
 
   const handleSave = async () => {
     if (!quiz) return;
     
+    setSaving(true);
     try {
-      setSaving(true);
-      
-      // Prepare the data for API submission with enhanced R2 format
-      const quizData = {
-        // Quiz metadata with version control
-        examSetId: `examset_${new Date().getFullYear()}_${quiz.topic_id}`,
-        examSetName: `${new Date().getFullYear()} Quiz Data - ${quiz.name}`,
-        subjectId: quiz.topic_id,
-        year: new Date().getFullYear(),
-        version: "1.0.0",
-        createdDate: new Date().toISOString().split('T')[0],
-        lastModified: new Date().toISOString(),
-        
-        // Access control settings
-        isPaid: true, // Boolean: true for paid quiz, false for free quiz
-        defaultIsFree: false,
-        
-        // Quiz configuration
-        totalQuestions: questions.length,
-        metadata: {
-          totalMarks: questions.reduce((sum, q) => sum + (q.marks || 1), 0),
-          estimatedDuration: questions.reduce((sum, q) => sum + (q.time_allocation || 2), 0),
-          difficultyDistribution: {
-            beginner: questions.filter(q => q.difficulty_level === 'BEGINNER').length,
-            intermediate: questions.filter(q => q.difficulty_level === 'INTERMEDIATE').length,
-            advanced: questions.filter(q => q.difficulty_level === 'ADVANCED').length
-          },
-          freeQuestions: questions.filter(q => q.is_free === true).length,
-          paidQuestions: questions.filter(q => q.is_free === false).length
-        },
-        
-        questions: questions.map((q, index) => {
-          // Convert frontend format to enhanced Cloudflare API format
-          const baseQuestion = {
-            number: q.question_number || index + 1,
-            questionText: q.question_text,
-            questionImage: q.question_image || '',
-            questionVideo: q.question_video || '',
-            questionAudio: q.question_audio || '',
-            questionPdf: '',
-            solutionText: q.explanation || '',
-            solutionImage: q.explanation_image || '',
-            solutionPdf: '',
-            solutionVideo: q.explanation_video || '',
-            solutionUrl: '',
-            
-            // Enhanced fields
-            questionId: q.question_id || `q_${index + 1}`,
-            version: q.version || "1.0",
-            isFree: q.is_free !== undefined ? q.is_free : false, // Default to paid
-            part: q.part || null,
-            mainQuestion: q.main_question || (q.question_number || index + 1),
-            subQuestion: q.sub_question || null,
-            hasSubQuestions: q.has_sub_questions || false,
-            hasParts: q.has_sub_questions || false, // Legacy field for compatibility
-            
-            // Academic properties
-            paperLevel: q.marks || 1,
-            marks: q.marks || 1,
-            difficultyLevel: q.difficulty_level || 'INTERMEDIATE',
-            timeAllocation: q.time_allocation || 2,
-            learningObjective: q.learning_objective || '',
-            lastModified: q.last_modified || new Date().toISOString().split('T')[0],
-            changeLog: q.change_log || ''
-          };
+      const totalMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+      const estimatedTime = Math.round(questions.reduce((sum, q) => sum + (q.time_allocation || 60), 0) / 60);
 
-          if (q.question_type === 'multiple_choice') {
-            return {
-              ...baseQuestion,
-              type: 'MULTIPLE_CHOICE',
-              options: q.options.map((opt, optIndex) => ({
-                order: optIndex + 1,
-                name: opt.option_letter,
-                optionText: opt.option_text,
-                optionImage: opt.option_image || '',
-                explanation: opt.is_correct ? 'Correct answer' : 'Incorrect answer',
-                isCorrectAnswer: opt.is_correct
-              }))
-            };
-          } else if (q.question_type === 'true_false') {
-            return {
-              ...baseQuestion,
-              type: 'TRUE_FALSE',
-              isCorrectAnswer: q.options?.[0]?.is_correct || false,
-              explanation: q.explanation || 'No explanation provided'
-            };
-          } else if (q.question_type === 'fill_in_blank') {
-            return {
-              ...baseQuestion,
-              type: 'FILL_IN_THE_BLANK',
-              correctAnswer: q.correct_answer || '',
-              blankIndex: q.question_text.indexOf('___') > -1 ? q.question_text.indexOf('___') : 0
-            };
-          } else {
-            // Default to multiple choice format
-            return {
-              ...baseQuestion,
-              type: 'MULTIPLE_CHOICE',
-              options: q.options.map((opt, optIndex) => ({
-                order: optIndex + 1,
-                name: opt.option_letter,
-                optionText: opt.option_text,
-                optionImage: opt.option_image || '',
-                explanation: opt.is_correct ? 'Correct answer' : 'Incorrect answer',
-                isCorrectAnswer: opt.is_correct
-              }))
-            };
-          }
-        })
+      const fullQuizData = {
+        title: quiz.name || `Quiz ${quiz.id}`,
+        description: `Questions for ${quiz.name}`,
+        paper_info: {
+          paper_number: 1,
+          paper_level: 'General',
+          paper_type: 'quiz',
+          total_questions: questions.length,
+          total_marks: totalMarks,
+          estimated_time_minutes: estimatedTime,
+        },
+        instructions: ["Answer ALL questions.", "Read each question carefully."],
+        sections: sections.map(sectionInfo => ({
+          ...sectionInfo,
+          // Filter questions belonging to this section and strip the temporary section_id
+          questions: questions
+            .filter(q => q.section_id === sectionInfo.section_id)
+            .map(({ section_id, ...restOfQuestion }) => restOfQuestion)
+        }))
       };
 
-      console.log('Uploading enhanced quiz data to R2:', quizData);
-      
-      // Import the uploadQuizData function
-      const { uploadQuizData } = await import('../api');
-      const response = await uploadQuizData(quiz.id, quizData);
-      
+      const response = await saveQuizQuestions(quiz.id, fullQuizData);
       if (response.data.success) {
-        const freeCount = questions.filter(q => q.is_free === true).length;
-        const paidCount = questions.filter(q => q.is_free === false).length;
-        
-        alert(`Successfully saved ${questions.length} questions to R2 storage for ${quiz.name}!\n\nBreakdown:\n• Free questions: ${freeCount}\n• Paid questions: ${paidCount}\n• Total marks: ${quizData.metadata.totalMarks}\n• Estimated duration: ${quizData.metadata.estimatedDuration} minutes\n\nR2 Key: ${response.data.data.r2Key}`);
+        alert(`Successfully saved ${questions.length} questions across ${sections.length} sections.`);
       } else {
-        throw new Error(response.data.error || 'Upload failed');
+        throw new Error(response.data.error || 'Save failed due to a server error.');
       }
-      
     } catch (err: any) {
-      console.error('Error saving questions:', err);
-      alert(`Failed to save questions: ${err.message || err}`);
+      setError(`Failed to save questions: ${err.message}`);
+      alert(`Failed to save questions: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -454,319 +282,54 @@ const QuizQuestionsUpload: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
+    // Uses the exact, comprehensive template provided by the user
     const templateData = {
-      // Quiz Metadata with Version Control
-      quizId: "sample_quiz_template_001",
-      quizName: "Sample Quiz Template - Ecological Interactions",
-      topicId: "topic_general_biology",
-      version: "1.0.0",
-      createdDate: new Date().toISOString().split('T')[0],
-      lastModified: new Date().toISOString(),
-      
-      // Access Control Settings
-      isPaid: true, // Boolean: true for paid quiz, false for free quiz
-      defaultIsFree: false, // Default access status for questions
-      
-      // Quiz Configuration
-      totalQuestions: 7,
-      estimatedDuration: 15, // minutes
-      difficultyLevel: "INTERMEDIATE", // Options: "BEGINNER", "INTERMEDIATE", "ADVANCED"
-      tags: ["ecology", "energy_flow", "food_webs", "biology"],
-      
-      questions: [
-        {
-          // Basic Question Info
-          number: 1,
-          questionId: "q_energy_source_001",
-          type: "MULTIPLE_CHOICE",
-          quizText: "What is the ultimate source of energy for most living organisms on Earth?",
-          quizImage: "",
-          quizVideo: "",
-          quizAudio: "",
-          
-          // Question Access & Organization
-          isFree: false, // Override default - this question requires payment
-          part: "A", // Question part (A, B, C or i, ii, iii)
-          mainQuestion: 1, // Main question number
-          subQuestion: null, // Sub-question identifier (null for main questions)
-          hasSubQuestions: false, // Whether this question has parts
-          
-          // Academic Properties
-          difficultyLevel: "INTERMEDIATE",
-          marks: 2,
-          timeAllocation: 2, // minutes
-          learningObjective: "Identify the primary source of energy in ecosystems",
-          
-          options: [
-            {
-              order: 1,
-              name: "A",
-              optionText: "Water",
-              optionImage: "",
-              explanation: "Incorrect. Water is essential for life but is not the primary source of energy.",
-              isCorrectAnswer: false
-            },
-            {
-              order: 2,
-              name: "B",
-              optionText: "The Sun",
-              optionImage: "",
-              explanation: "Correct! The sun provides solar energy, which producers convert into chemical energy through photosynthesis.",
-              isCorrectAnswer: true
-            },
-            {
-              order: 3,
-              name: "C",
-              optionText: "Soil",
-              optionImage: "",
-              explanation: "Incorrect. Soil provides nutrients, but not the initial energy for the ecosystem.",
-              isCorrectAnswer: false
-            },
-            {
-              order: 4,
-              name: "D",
-              optionText: "Wind",
-              optionImage: "",
-              explanation: "Incorrect. Wind is a form of energy but not the primary source for living organisms.",
-              isCorrectAnswer: false
-            }
-          ]
-        },
-        {
-          number: 2,
-          questionId: "q_energy_matter_flow_002",
-          type: "TRUE_FALSE",
-          quizText: "Energy in an ecosystem is recycled, while matter flows in one direction.",
-          quizImage: "",
-          quizVideo: "",
-          quizAudio: "",
-          
-          // Question Access & Organization
-          isFree: true, // Free access question
-          part: null,
-          mainQuestion: 2,
-          subQuestion: null,
-          hasSubQuestions: false,
-          
-          // Academic Properties
-          difficultyLevel: "INTERMEDIATE",
-          marks: 1,
-          timeAllocation: 1.5,
-          learningObjective: "Distinguish between energy flow and matter cycling in ecosystems",
-          
-          isCorrectAnswer: false,
-          explanation: "This is false. The opposite is true: Energy flows in one direction (unidirectional flow) and is lost as heat at each trophic level, while matter (nutrients) is recycled through biogeochemical cycles."
-        },
-        {
-          number: 3,
-          questionId: "q_consumer_types_003",
-          type: "FILL_IN_THE_BLANK",
-          quizText: "Organisms that feed on plants are called herbivores or ___ consumers.",
-          quizImage: "",
-          quizVideo: "",
-          quizAudio: "",
-          
-          // Question Access & Organization
-          isFree: false,
-          part: null,
-          mainQuestion: 3,
-          subQuestion: null,
-          hasSubQuestions: false,
-          
-          // Academic Properties
-          difficultyLevel: "BEGINNER",
-          marks: 1,
-          timeAllocation: 1,
-          learningObjective: "Classify consumers by trophic level",
-          
-          blankIndex: 53,
-          correctAnswer: "primary"
-        },
-        {
-          // Example of a main question with sub-parts
-          number: 4,
-          questionId: "q_food_webs_main_004",
-          type: "MULTIPLE_CHOICE",
-          quizText: "Study the following ecosystem scenario: In a forest, deer eat grass, wolves eat deer, and decomposers break down dead organisms.",
-          quizImage: "",
-          quizVideo: "",
-          quizAudio: "",
-          
-          // Question Access & Organization
-          isFree: false,
-          part: null, // Main question has no part designation
-          mainQuestion: 4,
-          subQuestion: null,
-          hasSubQuestions: true, // This question has sub-parts
-          
-          // Academic Properties
-          difficultyLevel: "ADVANCED",
-          marks: 3,
-          timeAllocation: 4,
-          learningObjective: "Analyze complex food web relationships",
-          
-          options: [
-            {
-              order: 1,
-              name: "A",
-              optionText: "This represents a simple food chain only.",
-              optionImage: "",
-              explanation: "Incorrect. This scenario can be part of a more complex food web.",
-              isCorrectAnswer: false
-            },
-            {
-              order: 2,
-              name: "B",
-              optionText: "This represents components of a food web.",
-              optionImage: "",
-              explanation: "Correct! This shows multiple feeding relationships that form part of a food web.",
-              isCorrectAnswer: true
-            },
-            {
-              order: 3,
-              name: "C",
-              optionText: "Decomposers are not part of food webs.",
-              optionImage: "",
-              explanation: "Incorrect. Decomposers are essential components of food webs.",
-              isCorrectAnswer: false
-            },
-            {
-              order: 4,
-              name: "D",
-              optionText: "Only producers and consumers are shown.",
-              optionImage: "",
-              explanation: "Incorrect. Decomposers are also mentioned in the scenario.",
-              isCorrectAnswer: false
-            }
-          ]
-        },
-        {
-          // Sub-question 4(a)
-          number: 5,
-          questionId: "q_food_webs_004a",
-          type: "MULTIPLE_CHOICE",
-          quizText: "4(a). In the ecosystem described above, which organism is the primary consumer?",
-          quizImage: "",
-          quizVideo: "",
-          quizAudio: "",
-          
-          // Question Access & Organization
-          isFree: false,
-          part: "a", // Sub-part designation
-          mainQuestion: 4,
-          subQuestion: "a",
-          hasSubQuestions: false,
-          
-          // Academic Properties
-          difficultyLevel: "INTERMEDIATE",
-          marks: 1,
-          timeAllocation: 1,
-          learningObjective: "Identify primary consumers in food chains",
-          
-          options: [
-            {
-              order: 1,
-              name: "A",
-              optionText: "Grass",
-              optionImage: "",
-              explanation: "Incorrect. Grass is a producer, not a consumer.",
-              isCorrectAnswer: false
-            },
-            {
-              order: 2,
-              name: "B",
-              optionText: "Deer",
-              optionImage: "",
-              explanation: "Correct! Deer feed directly on producers (grass), making them primary consumers.",
-              isCorrectAnswer: true
-            },
-            {
-              order: 3,
-              name: "C",
-              optionText: "Wolves",
-              optionImage: "",
-              explanation: "Incorrect. Wolves are secondary consumers as they eat primary consumers.",
-              isCorrectAnswer: false
-            },
-            {
-              order: 4,
-              name: "D",
-              optionText: "Decomposers",
-              optionImage: "",
-              explanation: "Incorrect. Decomposers have a different role in the ecosystem.",
-              isCorrectAnswer: false
-            }
-          ]
-        },
-        {
-          // Sub-question 4(b) with Roman numerals
-          number: 6,
-          questionId: "q_food_webs_004b",
-          type: "TRUE_FALSE",
-          quizText: "4(b)(i). The wolves in this ecosystem are tertiary consumers.",
-          quizImage: "",
-          quizVideo: "",
-          quizAudio: "",
-          
-          // Question Access & Organization
-          isFree: true, // Free sub-question
-          part: "b(i)", // Roman numeral sub-part
-          mainQuestion: 4,
-          subQuestion: "b(i)",
-          hasSubQuestions: false,
-          
-          // Academic Properties
-          difficultyLevel: "INTERMEDIATE",
-          marks: 1,
-          timeAllocation: 1,
-          learningObjective: "Classify consumers by trophic level in food chains",
-          
-          isCorrectAnswer: false,
-          explanation: "False. Wolves are secondary consumers because they eat primary consumers (deer). Tertiary consumers would eat secondary consumers."
-        },
-        {
-          // Independent question demonstrating version tracking
-          number: 7,
-          questionId: "q_biomass_pyramid_005",
-          type: "FILL_IN_THE_BLANK",
-          quizText: "The total mass of living organisms at each trophic level forms a _____ pyramid.",
-          quizImage: "",
-          quizVideo: "",
-          quizAudio: "",
-          
-          // Question Access & Organization
-          isFree: true, // Free question
-          part: null,
-          mainQuestion: 5,
-          subQuestion: null,
-          hasSubQuestions: false,
-          
-          // Academic Properties
-          difficultyLevel: "BEGINNER",
-          marks: 1,
-          timeAllocation: 1,
-          learningObjective: "Understand biomass distribution in ecosystems",
-          
-          blankIndex: 65,
-          correctAnswer: "biomass",
-          
-          // Version tracking for individual questions
-          questionVersion: "1.1",
-          lastModified: "2025-10-07",
-          changeLog: "Updated explanation for clarity"
-        }
-      ],
-      
-      // Quiz Metadata
-      metadata: {
-        totalMarks: 10,
-        passingScore: 6,
-        timeLimit: 15,
-        attempts: 3,
-        showCorrectAnswers: true,
-        randomizeQuestions: false,
-        randomizeOptions: true
-      }
+      "title": "Comprehensive Quiz & Exam Template (with Full Multimedia Support)",
+      "description": "The definitive universal template showcasing all supported question types and multimedia fields at every level (section, question, and option/item).",
+      "paper_info": { "paper_number": 1, "paper_level": "General", "paper_type": "template", "subject_id": "mixed_subjects", "total_questions": 8, "total_marks": 50, "estimated_time_minutes": 15 },
+      "instructions": [ "Answer ALL questions in this paper.", "Read each question carefully before answering.", "Some questions may include images, audio, or video for context." ],
+      "sections": [
+        { "section_id": "mcq", "section_name": "Section A: Multiple Choice Questions", "section_description": "Choose the single best answer for each question.", "section_image": "https://example.com/images/section_a_header.png", "questions": [
+          { "id": "q001", "question_number": 1, "question_text": "Which of the following flags belongs to Japan?", "question_type": "multiple_choice", "options": [
+            { "option_letter": "A", "option_text": "Flag A", "option_image": "https://example.com/images/flag_canada.png", "is_correct": false, "feedback": "This is the flag of Canada." },
+            { "option_letter": "B", "option_text": "Flag B", "option_image": "https://example.com/images/flag_japan.png", "is_correct": true, "feedback": "Correct! This is the 'Hinomaru'." },
+            { "option_letter": "C", "option_text": "Flag C", "option_image": "https://example.com/images/flag_brazil.png", "is_correct": false, "feedback": "This is the flag of Brazil." }
+          ], "correct_answer": "B", "explanation": "The Japanese flag, known as the Hinomaru (Circle of the Sun), features a large red disc on a white background.", "marks": 5, "is_free": true, "difficulty_level": "beginner", "time_allocation": 60 }
+        ]},
+        { "section_id": "tf", "section_name": "Section B: True/False", "questions": [
+          { "id": "q002", "question_number": 2, "question_text": "Listen to the audio clip. Is this the sound of a lion roaring?", "question_type": "true_false", "question_audio": "https://example.com/audio/tiger_growl.mp3", "options": [
+            { "option_letter": "True", "option_text": "True", "is_correct": false }, { "option_letter": "False", "option_text": "False", "is_correct": true }
+          ], "correct_answer": "False", "explanation": "The audio clip was the sound of a tiger, not a lion.", "marks": 5, "is_free": true, "time_allocation": 45 }
+        ]},
+        { "section_id": "sa", "section_name": "Section C: Short Answer", "questions": [
+          { "id": "q003", "question_number": 3, "question_text": "What is the name of the landmark shown in the image?", "question_type": "short_answer", "question_image": "https://example.com/images/eiffel_tower.jpg", "correct_answer": "Eiffel Tower", "marks": 5, "is_free": true }
+        ]},
+        { "section_id": "fib", "section_name": "Section D: Fill in the Blank", "questions": [
+          { "id": "q004", "question_number": 4, "question_text": "The largest planet in our solar system is ____.", "question_type": "fill_in_blank", "correct_answer": "Jupiter", "marks": 5 }
+        ]},
+        { "section_id": "essay", "section_name": "Section E: Short Essay", "questions": [
+          { "id": "q005", "question_number": 5, "question_text": "Watch the video about the water cycle. Briefly explain evaporation.", "question_type": "short_essay", "question_video": "https://example.com/videos/water_cycle.mp4", "correct_answer": "Model Answer: Evaporation is the process where liquid water heats up, turns into a gas (water vapor), and rises into the atmosphere.", "marks": 10, "is_free": false, "difficulty_level": "intermediate", "time_allocation": 300 }
+        ]},
+        { "section_id": "match", "section_name": "Section F: Matching", "questions": [
+          { "id": "q006", "question_number": 6, "question_text": "Match the artist to their painting.", "question_type": "matching", "column_a": [
+            { "item_number": "1", "item_text": "Artist A", "item_image": "https://example.com/images/artist_da_vinci.jpg", "correct_match": "B" }, { "item_number": "2", "item_text": "Artist B", "item_image": "https://example.com/images/artist_van_gogh.jpg", "correct_match": "A" }
+          ], "column_b": [
+            { "item_letter": "A", "item_text": "The Starry Night", "item_image": "https://example.com/images/painting_starry_night.jpg" }, { "item_letter": "B", "item_text": "Mona Lisa", "item_image": "https://example.com/images/painting_mona_lisa.jpg" }
+          ], "marks": 5, "difficulty_level": "intermediate" }
+        ]},
+        { "section_id": "order", "section_name": "Section G: Ordering", "questions": [
+          { "id": "q007", "question_number": 7, "question_text": "Arrange the butterfly life cycle images in order.", "question_type": "ordering", "items": [
+            { "item_id": "pupa", "item_text": "Pupa", "item_image": "https://example.com/images/lifecycle_pupa.png", "correct_position": 3 }, { "item_id": "adult", "item_text": "Butterfly", "item_image": "https://example.com/images/lifecycle_butterfly.png", "correct_position": 4 },
+            { "item_id": "egg", "item_text": "Eggs", "item_image": "https://example.com/images/lifecycle_eggs.png", "correct_position": 1 }, { "item_id": "larva", "item_text": "Caterpillar", "item_image": "https://example.com/images/lifecycle_caterpillar.png", "correct_position": 2 }
+          ], "correct_order": "egg, larva, pupa, adult", "marks": 5 }
+        ]},
+        { "section_id": "mr", "section_name": "Section H: Multiple Response", "questions": [
+          { "id": "q008", "question_number": 8, "question_text": "Select ALL images that show a percussion instrument.", "question_type": "multiple_response", "options": [
+            { "option_letter": "A", "option_text": "Drums", "option_image": "https://example.com/images/instrument_drums.jpg", "is_correct": true }, { "option_letter": "B", "option_text": "Flute", "option_image": "https://example.com/images/instrument_flute.jpg", "is_correct": false },
+            { "option_letter": "C", "option_text": "Xylophone", "option_image": "https://example.com/images/instrument_xylophone.jpg", "is_correct": true }, { "option_letter": "D", "option_text": "Violin", "option_image": "https://example.com/images/instrument_violin.jpg", "is_correct": false }
+          ], "correct_answers": ["A", "C"], "marks": 5 }
+        ]}
+      ]
     };
 
     const dataStr = JSON.stringify(templateData, null, 2);
@@ -774,7 +337,7 @@ const QuizQuestionsUpload: React.FC = () => {
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'quiz_template.json';
+    link.download = 'full_quiz_template_with_multimedia.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -790,32 +353,42 @@ const QuizQuestionsUpload: React.FC = () => {
       try {
         const jsonData = JSON.parse(e.target?.result as string);
 
-        // Validate the imported data structure - support new nested format only
+        // Validate the imported data structure - support nested format with sections
         let isValidFormat = false;
         let questionsArray = [];
+        let sectionsArray = [];
 
-        // Only support new nested format (questions inside sections)
+        // Support nested format with sections (preferred)
         if (jsonData.sections && Array.isArray(jsonData.sections)) {
           // Extract questions from all sections
           questionsArray = jsonData.sections.flatMap((section: any) =>
-            section.questions ? section.questions : []
+            section.questions ? section.questions.map((q: any) => ({ ...q, section_id: section.section_id })) : []
           );
+          sectionsArray = jsonData.sections.map((section: any) => ({
+            section_id: section.section_id,
+            section_name: section.section_name,
+            section_description: section.section_description,
+            section_image: section.section_image,
+            section_video: section.section_video,
+            section_audio: section.section_audio,
+          }));
           isValidFormat = questionsArray.length > 0;
         }
 
         if (isValidFormat) {
-          // Process the imported questions
-          processQuestionData({ questions: questionsArray });
+          // Process the imported questions and sections
+          setSections(sectionsArray);
+          setQuestions(questionsArray);
 
           // Automatically save to R2 after successful import
           if (quiz) {
             try {
               setSaving(true);
               const { uploadQuizData } = await import('../api');
-              const response = await uploadQuizData(quiz.id, { questions: questionsArray });
+              const response = await uploadQuizData(quiz.id, { sections: jsonData.sections });
 
               if (response.data.success) {
-                alert(`Successfully imported and saved ${questionsArray.length} questions to R2 storage!\nR2 Key: ${response.data.data.r2Key}`);
+                alert(`Successfully imported and saved ${questionsArray.length} questions across ${sectionsArray.length} sections to R2 storage!\nR2 Key: ${response.data.data.r2Key}`);
               } else {
                 alert(`Questions imported locally but failed to save to R2: ${response.data.error}`);
               }
@@ -826,7 +399,7 @@ const QuizQuestionsUpload: React.FC = () => {
               setSaving(false);
             }
           } else {
-            alert(`Successfully imported ${questionsArray.length} questions!`);
+            alert(`Successfully imported ${questionsArray.length} questions across ${sectionsArray.length} sections!`);
           }
         } else {
           alert('Invalid file format. Please use the correct JSON format with:\n• A "sections" array where each section contains a "questions" array\n• See questions_types.json for the complete template structure');
@@ -1038,11 +611,11 @@ const QuizQuestionsUpload: React.FC = () => {
               {quiz?.is_published ? 'Published' : 'Draft'}
             </span>
           </div>
-          {quiz?.quiz_data_url && (
+          {quiz?.questions_data_url && (
             <div>
               <strong style={{ color: '#667eea' }}>Data Source:</strong> 
               <a 
-                href={quiz.quiz_data_url} 
+                href={quiz.questions_data_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 style={{ 
@@ -1056,31 +629,6 @@ const QuizQuestionsUpload: React.FC = () => {
             </div>
           )}
         </div>
-        
-        {/* Question Parts Summary */}
-        {questions.some(q => q.part || q.has_sub_questions) && (
-          <div style={{ 
-            marginTop: '1rem', 
-            paddingTop: '1rem', 
-            borderTop: '1px solid #e1e8ed' 
-          }}>
-            <strong style={{ color: '#667eea', marginBottom: '0.5rem', display: 'block' }}>
-              Question Parts Structure:
-            </strong>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem' }}>
-              <div>
-                <strong>Main Questions:</strong> {questions.filter(q => !q.part).length}
-              </div>
-              <div>
-                <strong>Sub-parts:</strong> {questions.filter(q => q.part).length}
-              </div>
-              <div>
-                <strong>Questions with Parts:</strong> {questions.filter(q => q.has_sub_questions).length}
-              </div>
-            </div>
-          </div>
-        )}
-        
         {/* Difficulty Distribution */}
         <div style={{ 
           marginTop: '1rem', 
@@ -1109,7 +657,9 @@ const QuizQuestionsUpload: React.FC = () => {
 
       <QuizQuestionsManager 
         questions={questions} 
-        onChange={setQuestions} 
+        onChange={setQuestions}
+        sections={sections}
+        onSectionsChange={setSections}
       />
     </div>
   );

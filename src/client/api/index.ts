@@ -103,9 +103,20 @@ export const updateQuiz = (id: string, data: any) =>
 export const deleteQuiz = (id: string) => 
   api.delete<ApiResponse<void>>(`/quizzes/${id}`);
 
+// Quiz Questions API
+export const saveQuizQuestions = (quizId: string, questionsData: any) => 
+  api.post<ApiResponse<any>>(`/quizzes/${quizId}/questions`, questionsData);
+
+// Get quiz questions from API
+export const getQuizQuestions = (quizId: string) => 
+  api.get<ApiResponse<any>>(`/quizzes/${quizId}/questions`);
+
 // Upload quiz data to R2 storage
 export const uploadQuizData = (quizId: string, data: any) => 
   api.post<ApiResponse<any>>(`/quizzes/${quizId}/upload-data`, data);
+
+export const deleteQuizQuestions = (quizId: string) => 
+  api.delete<ApiResponse<void>>(`/quizzes/${quizId}/questions`);
 
 // Media Upload - direct to worker to avoid proxy issues
 export const uploadMedia = (file: File, description?: string) => {

@@ -1,0 +1,480 @@
+{
+  "title": "Cell Biology Quiz with Multimedia - Grade 10",
+  "description": "Comprehensive cell biology quiz with images, videos, and audio for enhanced learning",
+  "paper_info": {
+    "paper_number": 2,
+    "paper_level": "General",
+    "paper_type": "quiz",
+    "subject_id": "biology",
+    "total_questions": 20,
+    "total_marks": 35,
+    "estimated_time_minutes": 30
+  },
+  "instructions": [
+    "Answer ALL questions in this quiz.",
+    "Some questions include images, videos, or audio - make sure to view/listen to them.",
+    "Read each question carefully before answering."
+  ],
+  "sections": [
+    {
+      "section_id": "multimedia_mc",
+      "section_name": "Section A: Multimedia Multiple Choice",
+      "section_description": "Multiple choice questions with images and videos",
+      "section_image": "https://example.com/images/cell_biology_overview.jpg",
+      "section_video": "https://example.com/videos/cell_intro.mp4",
+      "questions": [
+        {
+          "id": "q_cell_structure_001",
+          "question_number": 1,
+          "question_text": "Looking at this plant cell diagram, which organelle is responsible for photosynthesis?",
+          "question_type": "multiple_choice",
+          "question_image": "https://example.com/images/plant_cell_diagram.jpg",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "Nucleus", "option_image": "https://example.com/images/nucleus_structure.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Chloroplast", "option_image": "https://example.com/images/chloroplast_closeup.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Vacuole", "option_image": "https://example.com/images/vacuole_diagram.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "Cell Wall", "option_image": "https://example.com/images/cell_wall_diagram.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Chloroplasts contain chlorophyll and are the site of photosynthesis in plant cells."
+        },
+        {
+          "id": "q_mitochondria_002",
+          "question_number": 2,
+          "question_text": "Watch this short video about cellular respiration. What is the primary function of mitochondria?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/mitochondria_function.mp4",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "intermediate",
+          "time_allocation": 3,
+          "options": [
+            {"option_letter": "A", "option_text": "Protein synthesis", "option_image": "https://example.com/images/ribosome_protein.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Energy production (ATP)", "option_image": "https://example.com/images/atp_molecule.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Waste storage", "option_image": "https://example.com/images/lysosome_waste.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "DNA replication", "option_image": "https://example.com/images/dna_replication.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Mitochondria are known as the powerhouse of the cell, producing ATP energy."
+        },
+        {
+          "id": "q_animal_cell_003",
+          "question_number": 3,
+          "question_text": "Compare these two cell images. Which one shows an animal cell?",
+          "question_type": "multiple_choice",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "Image A", "option_image": "https://example.com/images/plant_cell_labeled.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Image B", "option_image": "https://example.com/images/animal_cell_labeled.jpg", "is_correct": true}
+          ],
+          "correct_answer": "B",
+          "explanation": "Animal cells lack cell walls and chloroplasts, which are present in plant cells."
+        }
+      ]
+    },
+    {
+      "section_id": "audio_questions",
+      "section_name": "Section B: Audio-Based Questions",
+      "section_description": "Questions based on audio content",
+      "section_audio": "https://example.com/audio/cell_theory_overview.mp3",
+      "section_image": "https://example.com/images/audio_waveform.jpg",
+      "questions": [
+        {
+          "id": "q_cell_theory_audio_004",
+          "question_number": 4,
+          "question_text": "Listen to this audio explanation of the cell theory. According to the cell theory, all cells come from:",
+          "question_type": "multiple_choice",
+          "question_audio": "https://example.com/audio/cell_theory_explanation.mp3",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "intermediate",
+          "time_allocation": 3,
+          "options": [
+            {"option_letter": "A", "option_text": "Spontaneous generation", "is_correct": false},
+            {"option_letter": "B", "option_text": "Pre-existing cells", "is_correct": true},
+            {"option_letter": "C", "option_text": "Chemical reactions", "is_correct": false},
+            {"option_letter": "D", "option_text": "Minerals in soil", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "The cell theory states that all cells come from pre-existing cells."
+        },
+        {
+          "id": "q_photosynthesis_audio_005",
+          "question_number": 5,
+          "question_text": "Listen to this audio clip about photosynthesis. What gas is produced as a waste product?",
+          "question_type": "multiple_choice",
+          "question_audio": "https://example.com/audio/photosynthesis_process.mp3",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "Carbon dioxide", "option_image": "https://example.com/images/co2_molecule.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Oxygen", "option_image": "https://example.com/images/oxygen_molecule.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Nitrogen", "option_image": "https://example.com/images/nitrogen_molecule.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "Hydrogen", "option_image": "https://example.com/images/hydrogen_molecule.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Photosynthesis produces glucose and oxygen as waste."
+        }
+      ]
+    },
+    {
+      "section_id": "video_questions",
+      "section_name": "Section C: Video-Based Questions",
+      "section_description": "Questions requiring video analysis",
+      "section_video": "https://example.com/videos/microscope_basics.mp4",
+      "section_image": "https://example.com/images/video_thumbnail.jpg",
+      "questions": [
+        {
+          "id": "q_osmosis_video_006",
+          "question_number": 6,
+          "question_text": "Watch this osmosis demonstration video. What type of solution causes water to move out of the cell?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/osmosis_experiment.mp4",
+          "is_free": false,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 4,
+          "options": [
+            {"option_letter": "A", "option_text": "Hypotonic solution", "option_image": "https://example.com/images/hypotonic_diagram.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Hypertonic solution", "option_image": "https://example.com/images/hypertonic_diagram.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Isotonic solution", "option_image": "https://example.com/images/isotonic_diagram.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "In a hypertonic solution, water moves out of the cell causing plasmolysis."
+        },
+        {
+          "id": "q_microscope_video_007",
+          "question_number": 7,
+          "question_text": "Watch this video on microscope usage. What is the total magnification when using 10x eyepiece and 40x objective?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/microscope_tutorial.mp4",
+          "is_free": false,
+          "marks": 2,
+          "difficulty_level": "beginner",
+          "time_allocation": 3,
+          "options": [
+            {"option_letter": "A", "option_text": "50x", "is_correct": false},
+            {"option_letter": "B", "option_text": "400x", "is_correct": true},
+            {"option_letter": "C", "option_text": "1000x", "is_correct": false},
+            {"option_letter": "D", "option_text": "40x", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Total magnification = eyepiece × objective = 10 × 40 = 400x"
+        }
+      ]
+    },
+    {
+      "section_id": "mixed_media",
+      "section_name": "Section D: Mixed Media Questions",
+      "section_description": "Questions combining multiple media types",
+      "section_image": "https://example.com/images/dna_structure.jpg",
+      "section_video": "https://example.com/videos/cell_transport.mp4",
+      "section_audio": "https://example.com/audio/active_transport.mp3",
+      "questions": [
+        {
+          "id": "q_cell_transport_008",
+          "question_number": 8,
+          "question_text": "Study this diagram and listen to the explanation. Which process requires energy from ATP?",
+          "question_type": "multiple_choice",
+          "question_image": "https://example.com/images/cell_transport_diagram.jpg",
+          "question_audio": "https://example.com/audio/active_transport_explanation.mp3",
+          "is_free": false,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 4,
+          "options": [
+            {"option_letter": "A", "option_text": "Diffusion", "option_image": "https://example.com/images/diffusion_diagram.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Osmosis", "option_image": "https://example.com/images/osmosis_diagram.jpg", "is_correct": false},
+            {"option_letter": "C", "option_text": "Active Transport", "option_image": "https://example.com/images/active_transport.jpg", "is_correct": true},
+            {"option_letter": "D", "option_text": "Facilitated Diffusion", "option_image": "https://example.com/images/facilitated_diffusion.jpg", "is_correct": false}
+          ],
+          "correct_answer": "C",
+          "explanation": "Active transport moves substances against their concentration gradient using ATP energy."
+        },
+        {
+          "id": "q_dna_replication_009",
+          "question_number": 9,
+          "question_text": "Watch this DNA replication animation and answer: What enzyme is responsible for unwinding the DNA double helix?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/dna_replication_animation.mp4",
+          "is_free": false,
+          "marks": 2,
+          "difficulty_level": "advanced",
+          "time_allocation": 4,
+          "options": [
+            {"option_letter": "A", "option_text": "DNA Polymerase", "option_image": "https://example.com/images/dna_polymerase.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Helicase", "option_image": "https://example.com/images/helicase_enzyme.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Ligase", "option_image": "https://example.com/images/ligase_enzyme.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "RNA Primase", "option_image": "https://example.com/images/primase_enzyme.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Helicase unwinds the DNA double helix by breaking hydrogen bonds between base pairs."
+        }
+      ]
+    },
+    {
+      "section_id": "interactive_media",
+      "section_name": "Section E: Interactive Media Questions",
+      "section_description": "Questions requiring interaction with media",
+      "section_image": "https://example.com/images/cell_cycle_wheel.jpg",
+      "section_video": "https://example.com/videos/enzyme_animation.mp4",
+      "questions": [
+        {
+          "id": "q_cell_cycle_010",
+          "question_number": 10,
+          "question_text": "Use the interactive cell cycle diagram. In which phase does DNA replication occur?",
+          "question_type": "multiple_choice",
+          "question_image": "https://example.com/images/interactive_cell_cycle.jpg",
+          "is_free": false,
+          "marks": 2,
+          "difficulty_level": "intermediate",
+          "time_allocation": 3,
+          "options": [
+            {"option_letter": "A", "option_text": "G1 Phase", "option_image": "https://example.com/images/g1_phase.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "S Phase", "option_image": "https://example.com/images/s_phase_diagram.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "G2 Phase", "option_image": "https://example.com/images/g2_phase.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "M Phase", "option_image": "https://example.com/images/m_phase.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "DNA replication occurs during the S (Synthesis) phase of the cell cycle."
+        },
+        {
+          "id": "q_enzyme_action_011",
+          "question_number": 11,
+          "question_text": "Watch this enzyme-substrate interaction video. What happens to the enzyme after the reaction?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/enzyme_mechanism.mp4",
+          "is_free": false,
+          "marks": 2,
+          "difficulty_level": "advanced",
+          "time_allocation": 4,
+          "options": [
+            {"option_letter": "A", "option_text": "It is consumed", "option_image": "https://example.com/images/consumed_enzyme.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "It is permanently changed", "option_image": "https://example.com/images/changed_enzyme.jpg", "is_correct": false},
+            {"option_letter": "C", "option_text": "It remains unchanged", "option_image": "https://example.com/images/enzyme_reuse.jpg", "is_correct": true},
+            {"option_letter": "D", "option_text": "It becomes a product", "option_image": "https://example.com/images/enzyme_product.jpg", "is_correct": false}
+          ],
+          "correct_answer": "C",
+          "explanation": "Enzymes act as catalysts and are not consumed or permanently changed during reactions."
+        }
+      ]
+    },
+    {
+      "section_id": "practical_media",
+      "section_name": "Section F: Practical Media Questions",
+      "section_description": "Questions based on practical experiments",
+      "section_image": "https://example.com/images/microscope_setup.jpg",
+      "section_video": "https://example.com/videos/blood_smear.mp4",
+      "questions": [
+        {
+          "id": "q_onion_cells_012",
+          "question_number": 12,
+          "question_text": "Examine this microscope image of onion cells. What structure is visible that would NOT be seen in animal cells?",
+          "question_type": "multiple_choice",
+          "question_image": "https://example.com/images/onion_cells_microscope.jpg",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "beginner",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "Nucleus", "option_image": "https://example.com/images/nucleus_onion.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Cell Membrane", "option_image": "https://example.com/images/cell_membrane.jpg", "is_correct": false},
+            {"option_letter": "C", "option_text": "Cell Wall", "option_image": "https://example.com/images/cell_wall_structure.jpg", "is_correct": true},
+            {"option_letter": "D", "option_text": "Cytoplasm", "option_image": "https://example.com/images/cytoplasm_onion.jpg", "is_correct": false}
+          ],
+          "correct_answer": "C",
+          "explanation": "Plant cells like onion cells have cell walls, while animal cells do not."
+        },
+        {
+          "id": "q_blood_cells_013",
+          "question_number": 13,
+          "question_text": "Study this blood smear image. Which type of cell is responsible for oxygen transport?",
+          "question_type": "multiple_choice",
+          "question_image": "https://example.com/images/blood_smear.jpg",
+          "is_free": true,
+          "marks": 1,
+          "difficulty_level": "intermediate",
+          "time_allocation": 2,
+          "options": [
+            {"option_letter": "A", "option_text": "White Blood Cells", "option_image": "https://example.com/images/white_blood_cell.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Platelets", "option_image": "https://example.com/images/platelets.jpg", "is_correct": false},
+            {"option_letter": "C", "option_text": "Red Blood Cells", "option_image": "https://example.com/images/red_blood_cell.jpg", "is_correct": true},
+            {"option_letter": "D", "option_text": "Plasma", "option_image": "https://example.com/images/blood_plasma.jpg", "is_correct": false}
+          ],
+          "correct_answer": "C",
+          "explanation": "Red blood cells (erythrocytes) contain hemoglobin and transport oxygen."
+        }
+      ]
+    },
+    {
+      "section_id": "advanced_media",
+      "section_name": "Section G: Advanced Media Questions",
+      "section_description": "Complex questions with multiple media elements",
+      "section_image": "https://example.com/images/protein_synthesis.jpg",
+      "section_video": "https://example.com/videos/meiosis_process.mp4",
+      "section_audio": "https://example.com/audio/genetic_variation.mp3",
+      "questions": [
+        {
+          "id": "q_protein_synthesis_014",
+          "question_number": 14,
+          "question_text": "Watch this protein synthesis animation and study the diagram. Where does translation occur in the cell?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/protein_synthesis.mp4",
+          "question_image": "https://example.com/images/translation_diagram.jpg",
+          "is_free": false,
+          "marks": 3,
+          "difficulty_level": "advanced",
+          "time_allocation": 5,
+          "options": [
+            {"option_letter": "A", "option_text": "Nucleus", "option_image": "https://example.com/images/nucleus_dna.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Ribosomes", "option_image": "https://example.com/images/ribosome_structure.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Golgi Apparatus", "option_image": "https://example.com/images/golgi_apparatus.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "Lysosomes", "option_image": "https://example.com/images/lysosomes.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Translation (protein synthesis) occurs at ribosomes in the cytoplasm."
+        },
+        {
+          "id": "q_meiosis_015",
+          "question_number": 15,
+          "question_text": "Study this meiosis animation and chromosome diagram. How many daughter cells are produced in meiosis?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/meiosis_process.mp4",
+          "question_image": "https://example.com/images/meiosis_chromosomes.jpg",
+          "is_free": false,
+          "marks": 3,
+          "difficulty_level": "advanced",
+          "time_allocation": 5,
+          "options": [
+            {"option_letter": "A", "option_text": "1", "option_image": "https://example.com/images/meiosis_1_cell.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "2", "option_image": "https://example.com/images/meiosis_2_cells.jpg", "is_correct": false},
+            {"option_letter": "C", "option_text": "4", "option_image": "https://example.com/images/meiosis_4_cells.jpg", "is_correct": true},
+            {"option_letter": "D", "option_text": "8", "option_image": "https://example.com/images/meiosis_8_cells.jpg", "is_correct": false}
+          ],
+          "correct_answer": "C",
+          "explanation": "Meiosis produces 4 genetically different daughter cells from one parent cell."
+        }
+      ]
+    },
+    {
+      "section_id": "comprehensive_media",
+      "section_name": "Section H: Comprehensive Media Questions",
+      "section_description": "Questions requiring synthesis of multiple media types",
+      "section_image": "https://example.com/images/ecosystem_diagram.jpg",
+      "section_video": "https://example.com/videos/biotechnology.mp4",
+      "section_audio": "https://example.com/audio/immune_response.mp3",
+      "questions": [
+        {
+          "id": "q_ecosystem_016",
+          "question_number": 16,
+          "question_text": "Watch this ecosystem video, listen to the audio explanation, and study the food web diagram. What is the role of decomposers?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/ecosystem_dynamics.mp4",
+          "question_audio": "https://example.com/audio/decomposer_role.mp3",
+          "question_image": "https://example.com/images/food_web_diagram.jpg",
+          "is_free": false,
+          "marks": 3,
+          "difficulty_level": "advanced",
+          "time_allocation": 6,
+          "options": [
+            {"option_letter": "A", "option_text": "Produce energy", "option_image": "https://example.com/images/producer_plants.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Break down dead organisms", "option_image": "https://example.com/images/decomposer_bacteria.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Create food", "option_image": "https://example.com/images/food_chain.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "Store water", "option_image": "https://example.com/images/water_storage.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Decomposers break down dead organisms and recycle nutrients back into the ecosystem."
+        },
+        {
+          "id": "q_evolution_017",
+          "question_number": 17,
+          "question_text": "Examine these fossil images and watch the evolution timeline video. What evidence supports evolutionary theory?",
+          "question_type": "multiple_response",
+          "question_video": "https://example.com/videos/evolution_timeline.mp4",
+          "question_image": "https://example.com/images/fossil_sequence.jpg",
+          "is_free": false,
+          "marks": 3,
+          "difficulty_level": "advanced",
+          "time_allocation": 6,
+          "options": [
+            {"option_letter": "A", "option_text": "Fossil record", "option_image": "https://example.com/images/fossil_layers.jpg", "is_correct": true},
+            {"option_letter": "B", "option_text": "DNA similarities", "option_image": "https://example.com/images/dna_comparison.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Geological formations", "option_image": "https://example.com/images/geological_layers.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "Comparative anatomy", "option_image": "https://example.com/images/homologous_structures.jpg", "is_correct": true}
+          ],
+          "correct_answers": ["A", "B", "D"],
+          "explanation": "Fossil record, DNA similarities, and comparative anatomy provide evidence for evolution."
+        },
+        {
+          "id": "q_biotechnology_018",
+          "question_number": 18,
+          "question_text": "Watch this CRISPR video and study the gene editing diagram. What is the main advantage of CRISPR technology?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/crispr_explanation.mp4",
+          "question_image": "https://example.com/images/crispr_mechanism.jpg",
+          "is_free": false,
+          "marks": 3,
+          "difficulty_level": "advanced",
+          "time_allocation": 5,
+          "options": [
+            {"option_letter": "A", "option_text": "Creates new genes", "option_image": "https://example.com/images/gene_creation.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Precise gene editing", "option_image": "https://example.com/images/crispr_precision.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Clones organisms", "option_image": "https://example.com/images/cloning_process.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "Sequences DNA", "option_image": "https://example.com/images/dna_sequencing.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "CRISPR allows precise editing of specific genes in the DNA sequence."
+        },
+        {
+          "id": "q_immune_system_019",
+          "question_number": 19,
+          "question_text": "Study this immune response animation and listen to the explanation. Which cells are responsible for antibody production?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/immune_response.mp4",
+          "question_audio": "https://example.com/audio/b_cells_explanation.mp3",
+          "is_free": false,
+          "marks": 2,
+          "difficulty_level": "advanced",
+          "time_allocation": 4,
+          "options": [
+            {"option_letter": "A", "option_text": "T Cells", "option_image": "https://example.com/images/t_cells.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "B Cells", "option_image": "https://example.com/images/b_cell_antibody.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Macrophages", "option_image": "https://example.com/images/macrophages.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "Red Blood Cells", "option_image": "https://example.com/images/red_blood_cells.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "B cells produce antibodies that bind to specific antigens."
+        },
+        {
+          "id": "q_neural_transmission_020",
+          "question_number": 20,
+          "question_text": "Watch this neural transmission video and examine the synapse diagram. What chemical is released at the synapse?",
+          "question_type": "multiple_choice",
+          "question_video": "https://example.com/videos/neural_transmission.mp4",
+          "question_image": "https://example.com/images/synapse_diagram.jpg",
+          "is_free": false,
+          "marks": 2,
+          "difficulty_level": "advanced",
+          "time_allocation": 4,
+          "options": [
+            {"option_letter": "A", "option_text": "Insulin", "option_image": "https://example.com/images/insulin_molecule.jpg", "is_correct": false},
+            {"option_letter": "B", "option_text": "Neurotransmitters", "option_image": "https://example.com/images/neurotransmitter_molecules.jpg", "is_correct": true},
+            {"option_letter": "C", "option_text": "Hormones", "option_image": "https://example.com/images/hormone_molecules.jpg", "is_correct": false},
+            {"option_letter": "D", "option_text": "Enzymes", "option_image": "https://example.com/images/enzyme_molecules.jpg", "is_correct": false}
+          ],
+          "correct_answer": "B",
+          "explanation": "Neurotransmitters are chemicals released at synapses to transmit signals between neurons."
+        }
+      ]
+    }
+  ]
+}
