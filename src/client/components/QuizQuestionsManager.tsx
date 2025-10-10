@@ -193,6 +193,18 @@ const QuizQuestionsManager: React.FC<QuizQuestionsManagerProps> = ({ questions, 
             </div>
           )}
           
+          {question.question_video && (
+            <div className="media-preview">
+              <video src={question.question_video} controls style={{ maxWidth: '200px', maxHeight: '100px' }} />
+            </div>
+          )}
+          
+          {question.question_audio && (
+            <div className="media-preview">
+              <audio src={question.question_audio} controls style={{ maxWidth: '200px' }} />
+            </div>
+          )}
+          
           <div className="question-meta" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
             <span className="question-type" style={{ 
               background: '#f0f0f0', 
